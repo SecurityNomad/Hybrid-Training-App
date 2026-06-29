@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>HYROX Race Dashboard — Raha</title>
+<meta name="theme-color" content="#0d0e11">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HYROX Prep">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon-64.png">
+<style>
+:root{
+  --bg:#0d0e11; --card:#16181d; --card2:#1d2026; --line:#2a2e36;
+  --text:#e8eaed; --muted:#9aa0aa; --accent:#ffd60a; --accent2:#ffb800;
+  --green:#3ddc84; --red:#ff5d5d; --blue:#5ab0ff;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.5;padding-bottom:60px}
+header{padding:24px 20px 12px;max-width:1100px;margin:0 auto}
+header h1{font-size:26px;letter-spacing:.5px}
+header h1 span{color:var(--accent)}
+header .sub{color:var(--muted);font-size:14px;margin-top:2px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 20px;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:5;border-bottom:1px solid var(--line)}
+nav button{background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13.5px;cursor:pointer;font-weight:600}
+nav button.active{background:var(--accent);color:#111;border-color:var(--accent)}
+.tab{display:none}
+.tab.active{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.card h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+.big{font-size:34px;font-weight:800}
+.big small{font-size:14px;color:var(--muted);font-weight:500}
+.accent{color:var(--accent)}
+.green{color:var(--green)}
+.red{color:var(--red)}
+.muted{color:var(--muted)}
+h2.sec{font-size:18px;margin:26px 0 12px;display:flex;align-items:center;gap:8px}
+h2.sec::before{content:"";width:4px;height:18px;background:var(--accent);border-radius:2px;display:inline-block}
+.bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+/* week cards */
+.week{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.week.current{border-color:var(--accent)}
+.whead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;gap:10px;flex-wrap:wrap}
+.whead:hover{background:var(--card2)}
+.whead .wtitle{font-weight:700;font-size:15px}
+.whead .wmeta{color:var(--muted);font-size:12.5px}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:.5px}
+.b1{background:#1b3a2d;color:var(--green)}
+.b2{background:#3a2e1b;color:var(--accent)}
+.b3{background:#3a1b1b;color:var(--red)}
+.bsim{background:var(--accent);color:#111}
+.bdel{background:#1b2c3a;color:var(--blue)}
+.wbody{display:none;border-top:1px solid var(--line);padding:6px 18px 14px}
+.week.open .wbody{display:block}
+.sess{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.sess:last-child{border-bottom:none}
+.sess input{margin-top:4px;width:17px;height:17px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.sess .day{font-weight:800;font-size:12px;color:var(--accent);width:38px;flex-shrink:0;margin-top:2px}
+.sess .st{font-weight:700;font-size:14px}
+.sess .sd{color:var(--muted);font-size:13px;margin-top:2px;white-space:pre-line}
+.sess.done .st,.sess.done .sd{text-decoration:line-through;opacity:.45}
+/* benchmarks */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.8px}
+input[type=text],input[type=date],input[type=number],select{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 12px;font-size:14px;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+.btn{background:var(--accent);color:#111;border:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:14px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--red);border:1px solid var(--line);padding:4px 10px;font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.chartbox{margin-top:14px}
+.chartbox svg{width:100%;height:160px}
+.trend{font-size:12px;font-weight:700}
+ul.clean{list-style:none}
+ul.clean li{padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+ul.clean li:last-child{border:none}
+ul.clean li b{color:var(--accent)}
+.check li{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{width:17px;height:17px;accent-color:var(--accent);margin-top:3px;flex-shrink:0}
+.check li.done span{text-decoration:line-through;opacity:.5}
+.note{background:var(--card2);border-left:3px solid var(--accent);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13.5px;color:var(--muted);margin:12px 0}
+.note b{color:var(--text)}
+.station-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.mistake{border-left:3px solid var(--red)}
+footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);font-size:12px}
+@media(max-width:600px){.big{font-size:26px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>HYROX <span>RACE PREP</span></h1>
+  <div class="sub">13-week build · Race day: Saturday 26 September 2026 · Goal: finish strong, first HYROX</div>
+  <button id="installBtn" class="btn" style="display:none;margin-top:12px">⤓ Install app</button>
+  <div id="iosHint" style="display:none;margin-top:10px;font-size:12.5px;color:var(--muted)">To install: tap <b>Share</b> → <b>Add to Home Screen</b>.</div>
+</header>
+
+<div class="wrap">
+<nav id="nav">
+  <button data-tab="dash" class="active">Dashboard</button>
+  <button data-tab="plan">Training Plan</button>
+  <button data-tab="bench">Benchmarks</button>
+  <button data-tab="strategy">Race Strategy</button>
+  <button data-tab="recovery">Recovery</button>
+  <button data-tab="raceweek">Race Week</button>
+  <button data-tab="mistakes">Mistakes</button>
+</nav>
+
+<!-- ============ DASHBOARD ============ -->
+<section class="tab active" id="tab-dash">
+  <div class="grid g3">
+    <div class="card"><h3>Countdown</h3><div class="big accent" id="d-count">—</div><div class="muted" id="d-racedate"></div></div>
+    <div class="card"><h3>Current Week</h3><div class="big" id="d-week">—</div><div class="muted" id="d-block"></div></div>
+    <div class="card"><h3>Plan Completion</h3><div class="big" id="d-pct">0<small>%</small></div><div class="bar"><i id="d-bar" style="width:0%"></i></div></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h3>This Week's Focus</h3><div id="d-focus" style="font-size:14.5px"></div></div>
+    <div class="card"><h3>Next Race Simulation</h3><div id="d-sim" style="font-size:14.5px"></div></div>
+  </div>
+  <h2 class="sec">Block Progress</h2>
+  <div class="grid g3" id="d-blocks"></div>
+  <h2 class="sec">Latest Benchmarks</h2>
+  <div class="card"><table id="d-benchtable"><thead><tr><th>Metric</th><th>Latest</th><th>First</th><th>Trend</th></tr></thead><tbody></tbody></table>
+  <div class="muted" style="font-size:12.5px;margin-top:10px">Log new values in the Benchmarks tab. Test weeks: baseline W1 · retest W7 · retest W10.</div></div>
+</section>
+
+<!-- ============ PLAN ============ -->
+<section class="tab" id="tab-plan">
+  <div class="note"><b>How to use:</b> tick sessions as you complete them — the dashboard tracks your progress. Tap a week to expand. Core days: <b>Mon, Tue, Wed, Fri</b> + 1 optional Sun Zone-2 day. The <b>Friday</b> Hybrid/sim session can slide to <b>Saturday</b> on weeks Friday won't work (Thursday is your rest buffer either way). Deloads are planned, not optional. <b>SIM</b> weeks contain a race simulation (log the time in Benchmarks).</div>
+  <div id="weeks"></div>
+</section>
+
+<!-- ============ BENCHMARKS ============ -->
+<section class="tab" id="tab-bench">
+  <div class="card">
+    <h3>Log a result</h3>
+    <div class="row" style="margin-top:8px">
+      <select id="b-metric"></select>
+      <input type="date" id="b-date">
+      <input type="text" id="b-value" placeholder="value" style="width:120px">
+      <button class="btn" onclick="addBench()">Log</button>
+    </div>
+    <div class="muted" id="b-hint" style="font-size:12.5px;margin-top:8px"></div>
+  </div>
+  <div id="b-cards" style="margin-top:14px"></div>
+  <div class="row" style="margin-top:18px">
+    <button class="btn ghost" onclick="exportData()">Export data (JSON)</button>
+    <button class="btn ghost" onclick="document.getElementById('importfile').click()">Import data</button>
+    <input type="file" id="importfile" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+</section>
+
+<!-- ============ STRATEGY ============ -->
+<section class="tab" id="tab-strategy">
+  <h2 class="sec">Pacing the 8 × 1km runs</h2>
+  <div class="card">
+    <ul class="clean">
+      <li><b>Anchor pace:</b> your between-station pace should be 15–25 s/km <i>slower</i> than your fresh standalone 5k pace. As a first-timer, err conservative — you can always speed up after Run 6.</li>
+      <li><b>Run 1 is a lie.</b> Adrenaline + fresh legs make it feel easy. Run it as your <i>slowest</i> planned run. Going out 20s/km too fast here costs minutes at wall balls.</li>
+      <li><b>First 200m rule:</b> the first 200m out of every station is for resetting — shake out arms, lower heart rate, settle breathing. Build to pace, don't sprint out of the roxzone.</li>
+      <li><b>Even-split target:</b> aim for runs 2–7 within a 10-second band of each other. Run 8 is free — empty the tank into wall balls.</li>
+      <li><b>After heavy-leg stations</b> (sled push, sled pull, lunges): expect the first 400m to feel terrible. Shorten stride, raise cadence, it passes.</li>
+      <li><b>Walking is a tool, not a failure:</b> 10 brisk walking steps with purpose beats a shuffle-jog spiral. Use it deliberately after sleds if needed.</li>
+    </ul>
+  </div>
+  <h2 class="sec">Station game plan (Open division)</h2>
+  <div class="station-grid" id="stations"></div>
+  <h2 class="sec">Division loads reference</h2>
+  <div class="card"><table>
+    <thead><tr><th>Station</th><th>Open Men</th><th>Open Women</th></tr></thead>
+    <tbody>
+      <tr><td>Sled Push (50m)</td><td>152 kg total</td><td>102 kg total</td></tr>
+      <tr><td>Sled Pull (50m)</td><td>103 kg total</td><td>78 kg total</td></tr>
+      <tr><td>Farmers Carry (200m)</td><td>2 × 24 kg</td><td>2 × 16 kg</td></tr>
+      <tr><td>Sandbag Lunges (100m)</td><td>20 kg</td><td>10 kg</td></tr>
+      <tr><td>Wall Balls (100 reps)</td><td>6 kg / 3.05m target</td><td>4 kg / 2.7m target</td></tr>
+    </tbody>
+  </table><div class="muted" style="font-size:12px;margin-top:8px">Verify current season weights on hyrox.com — loads occasionally change between seasons.</div></div>
+</section>
+
+<!-- ============ RECOVERY ============ -->
+<section class="tab" id="tab-recovery">
+  <h2 class="sec">Weekly recovery protocol</h2>
+  <div class="card"><ul class="clean">
+    <li><b>Sleep:</b> 7.5–9h. This is 80% of your recovery. Non-negotiable in Block 2–3 when volume peaks.</li>
+    <li><b>Protein:</b> 1.6–2.2 g/kg bodyweight daily. With 9 years of training you know this — don't let it slip when running volume climbs.</li>
+    <li><b>Post-session (within 60 min):</b> 30–40g protein + 60–100g carbs after hybrid/sim days. Strength days: normal meals are fine.</li>
+    <li><b>Easy day discipline:</b> Zone 2 means conversational. If you can't talk in full sentences, you're stealing from tomorrow's session.</li>
+    <li><b>Weekly minimums:</b> 1 full rest day, 10 min daily mobility (hips, ankles, thoracic — your overhead weakness lives in the T-spine), 1 longer mobility session (20–30 min) on Sunday.</li>
+    <li><b>Soft tissue:</b> calves and quads twice weekly (foam roll/massage gun) once running passes 20 km/week — this is where new HYROX runners break.</li>
+    <li><b>Monitor:</b> resting HR each morning. 5+ bpm above baseline for 2 days = swap the next hard session for Zone 2.</li>
+  </ul></div>
+  <h2 class="sec">Deload weeks (W5 and W10)</h2>
+  <div class="card"><ul class="clean">
+    <li><b>Volume:</b> cut total volume ~40–50%. Keep some intensity (a few heavy-ish singles/doubles feel-good sets) so you don't go flat.</li>
+    <li><b>Running:</b> all easy. No intervals. Strides only.</li>
+    <li><b>Purpose:</b> deloads are where adaptation happens. Athletes who skip W5/W10 deloads show up to Block 3 cooked. Trust the plan.</li>
+    <li><b>Feel great by Thursday?</b> Good. That's the point. Still don't add work.</li>
+  </ul></div>
+  <div class="note"><b>Taper (W12–13):</b> volume drops ~50% in W12 and ~70% in W13, intensity stays sharp and short. Expect to feel flat early in the taper and springy by race Saturday — that's normal supercompensation. Resist the panic-training urge.</div>
+</section>
+
+<!-- ============ RACE WEEK ============ -->
+<section class="tab" id="tab-raceweek">
+  <h2 class="sec">Race-week checklist</h2>
+  <div class="card"><ul class="clean check" id="checklist"></ul>
+  <div style="margin-top:10px"><button class="btn ghost" onclick="resetChecklist()">Reset checklist</button></div></div>
+  <h2 class="sec">Fueling plan</h2>
+  <div class="card"><ul class="clean">
+    <li><b>Thu–Fri (carb load):</b> 6–8 g carbs/kg bodyweight per day. Familiar foods only — rice, pasta, potatoes, bread, fruit. Reduce fibre and fat slightly on Friday.</li>
+    <li><b>Race morning (race is Saturday):</b> breakfast 2.5–3h before start — ~100–150g carbs, low fibre, low fat (e.g. oats + banana + honey, white toast + jam). Sip 500ml water with electrolytes.</li>
+    <li><b>60–90 min out:</b> small top-up if hungry — banana or half an energy bar. Nothing new, ever.</li>
+    <li><b>15 min before start:</b> optional gel or sports drink sip + caffeine if you use it (3 mg/kg, only if practiced in sims).</li>
+    <li><b>During (60–90 min race):</b> 1 gel around the rower (station 6) if the race is going past ~75 min for you. Water at stations only if genuinely thirsty — small sips.</li>
+    <li><b>Practice all of this at SIM #4 (Week 11).</b> Race day is a dress rehearsal repeat, not an experiment.</li>
+  </ul></div>
+</section>
+
+<!-- ============ MISTAKES ============ -->
+<section class="tab" id="tab-mistakes">
+  <h2 class="sec">Common mistakes at your level</h2>
+  <div id="mistakes-list" class="grid" style="grid-template-columns:1fr"></div>
+</section>
+</div>
+
+<footer>Built for Raha · 13-week HYROX prep · Data saved locally in this browser (use Export to back up). Not medical advice — listen to your body.</footer>
+
+<script>
+/* =================== DATA =================== */
+const RACE_DATE = new Date(2026,8,26); // Sat 26 Sep 2026
+const PLAN_START = new Date(2026,5,29); // Mon 29 Jun 2026
+const STORE_KEY = 'hyrox_dash_raha_v1';
+
+const BLOCKS = [
+ {n:1, name:'Base & Engine', weeks:[1,4], cls:'b1', desc:'Build the aerobic base your lifting years never gave you. Learn every station with light loads. Run volume 12→16km.'},
+ {n:2, name:'Build & Strength-Endurance', weeks:[5,9], cls:'b2', desc:'Compromised running, race-weight stations, threshold work. The hardest block. Run volume 20→24km.'},
+ {n:3, name:'Race-Specific & Taper', weeks:[10,13], cls:'b3', desc:'Everything at race pace and race weight. Full dress rehearsal W11, then taper into race day.'}
+];
+
+// d=day, t=type, n=name, x=details
+const WEEKS = [
+{w:1, block:1, focus:'Movement quality + aerobic base. Baseline tests: log 5k TT, 1000m row, 100 wall balls this week.', sess:[
+ {d:'Mon',t:'Strength A',n:'Lower + Carries',x:'Back squat 4×6 @ 70–75% · RDL 3×8 · DB walking lunge 3×12/leg · Farmers carry 4×40m heavy · Plank 3×45s'},
+ {d:'Tue',t:'Run',n:'Intervals — 6×400m',x:'2km easy warm-up · 6×400m @ 5k effort, 90s walk rest · 1km cool-down'},
+ {d:'Wed',t:'Strength B',n:'Upper + Weakness Work',x:'Push press 4×6 · Overhead plate hold 3×30s (build the iso!) · Bench 3×8 maintain · Strict pull-ups 4×6 · Wall ball technique 5×10 light · Hollow hold 3×30s'},
+ {d:'Fri',t:'Hybrid',n:'Engine Builder',x:'4 rounds: 500m run + 15 cal row + 10 wall balls. Steady pace — practice smooth station entries/exits.'},
+ {d:'Sun',t:'Run (opt)',n:'Zone 2',x:'30–40 min conversational pace. Skip if beaten up — Block 1 is about consistency, not heroics.'}]},
+{w:2, block:1, focus:'Skill-dense week: introduce SkiErg, sled and burpee broad jump. Build interval volume.', sess:[
+ {d:'Mon',t:'Strength A',n:'Lower + Sled Intro',x:'Back squat 4×6 @ 72–77% · Hip thrust 3×10 · Sandbag lunge 3×20m light · Sled push 6×15m moderate (low drive, small steps) · Farmers carry 4×50m'},
+ {d:'Tue',t:'Run',n:'Intervals — 5×600m',x:'2km warm-up · 5×600m @ 5k effort, 90s rest · 1km cool-down'},
+ {d:'Wed',t:'Strength B',n:'Upper + Weakness Work',x:'Push press 4×6 (+2.5kg) · OH plate hold 3×35s · Bench 3×8 · Pull-ups 4×7 · Wall balls 4×12 · Burpee broad jump 4×15m (step back, jump forward, save the legs)'},
+ {d:'Fri',t:'Hybrid',n:'Ski + BBJ Introduction',x:'4 rounds: 500m run + 500m SkiErg + 8 burpee broad jumps. Learn ski rhythm: legs-then-arms, long strokes. Metronome the burpees.'},
+ {d:'Sun',t:'Run (opt)',n:'Zone 2',x:'40–45 min conversational.'}]},
+{w:3, block:1, sim:'SIM #1 — Half', focus:'First race simulation Friday (slide to Sat if needed). Learn what compromised running actually feels like.', sess:[
+ {d:'Mon',t:'Strength A',n:'Lower + Sled Pull',x:'Back squat 4×5 @ 77% · RDL 3×8 · Sled pull 6×15m (lean back, walk it) · Sandbag lunge 4×20m · Farmers 4×60m'},
+ {d:'Tue',t:'Run',n:'Intervals — 6×500m',x:'2km warm-up · 6×500m @ 5k effort, 75s rest · 1km cool-down'},
+ {d:'Wed',t:'Primer',n:'Light + Mobility',x:'Push press 3×5 @ 60% · Wall balls 3×10 · OH hold 3×30s · 20 min mobility. Keep it easy before the sim.'},
+ {d:'Fri',t:'RACE SIM',n:'Sim #1 — Half Distance',x:'4 × 1km run, station after each: ① 500m SkiErg ② 25m sled push (light-moderate) ③ 40m burpee broad jump ④ 500m row.\nRecord total time + each split → log under "Race Simulation" in Benchmarks.'},
+ {d:'Sun',t:'Recovery',n:'Rest / Walk',x:'Full rest or 20 min walk. Note what hurt in the sim — that is your homework for Block 2.'}]},
+{w:4, block:1, deload:true, focus:'DELOAD. Volume −40%. Adaptation happens now — do not add work.', sess:[
+ {d:'Mon',t:'Strength A',n:'Deload Lower',x:'Back squat 3×5 @ 60% · Light RDL 2×8 · Easy carries 2×40m. In and out in 40 min.'},
+ {d:'Tue',t:'Run',n:'Easy + Strides',x:'30 min easy run + 4×20s relaxed strides.'},
+ {d:'Wed',t:'Skills',n:'Movement Quality',x:'3 easy rounds: 300m ski + 300m row + 10 wall balls · 20 min mobility (T-spine + hips priority).'},
+ {d:'Fri',t:'Aerobic',n:'Mixed Zone 2',x:'35 min alternating 400m run / 300m row, fully conversational.'},
+ {d:'Sun',t:'Recovery',n:'Rest',x:'Full rest. Review Block 1: log weekly run volume, re-read sim notes.'}]},
+{w:5, block:2, focus:'Block 2 opens: race-weight stations + threshold running. Hardest block begins.', sess:[
+ {d:'Mon',t:'Strength A',n:'Lower + Heavy Sled',x:'Back squat 5×5 @ 77–80% · Hip thrust 3×8 · Sandbag lunge 4×25m race weight · Sled push 8×15m heavy · Farmers 4×60m race weight'},
+ {d:'Tue',t:'Run',n:'Threshold — 5×1000m',x:'2km warm-up · 5×1000m @ threshold (≈10k effort), 90s rest · 1km cool-down'},
+ {d:'Wed',t:'Strength B',n:'Upper + Stations',x:'Push press 5×5 · OH plate walking lunge 3×20m · Pull-ups 4×8 · Wall balls 4×20 unbroken · SkiErg 6×250m hard, 1:1 rest'},
+ {d:'Fri',t:'Hybrid',n:'Compromised Running',x:'5 rounds: 800m run + 15 wall balls + 100m farmers carry (race weight). Hold the same run pace every round.'},
+ {d:'Sun',t:'Run (opt)',n:'Zone 2',x:'45 min conversational.'}]},
+{w:6, block:2, sim:'SIM #2 — 3/4', focus:'Second sim — longer, heavier. Pace it off Sim #1 data.', sess:[
+ {d:'Mon',t:'Strength A',n:'Lower + Sled Pull',x:'Back squat 5×4 @ 80% · RDL 4×6 · Sled pull 8×15m · Suitcase carry 3×40m/side'},
+ {d:'Tue',t:'Run',n:'Threshold — 4×1200m',x:'2km warm-up · 4×1200m @ threshold, 2min rest · 1km cool-down'},
+ {d:'Wed',t:'Primer',n:'Light + Mobility',x:'3 easy rounds: 300m ski + 10 wall balls · 20 min mobility. Sleep big tonight.'},
+ {d:'Fri',t:'RACE SIM',n:'Sim #2 — 3/4 Distance',x:'6 × 800m run, station after each: ① 750m ski ② 35m sled push ③ 35m sled pull ④ 60m burpee broad jump ⑤ 750m row ⑥ 150m farmers carry.\nLog total + splits. Target: even run splits, no blow-up.'},
+ {d:'Sun',t:'Recovery',n:'Rest / Walk',x:'Full rest or easy 20 min walk.'}]},
+{w:7, block:2, focus:'Retest week: 1000m row + 100 wall balls on Thursday. Compare to W1 baseline.', sess:[
+ {d:'Mon',t:'Strength A',n:'Lower + Heavy Sled',x:'Back squat 5×5 @ 80–82% · Hip thrust 4×8 · Sandbag lunge 4×25m · Sled push 6×20m heavy'},
+ {d:'Tue',t:'Run',n:'Tempo — 3×2000m',x:'2km warm-up · 3×2000m @ tempo (between 10k and half-marathon effort), 2min rest · 1km cool-down'},
+ {d:'Wed',t:'Strength B',n:'Upper + RETESTS',x:'RETEST: 1000m row for time, then (15 min later) 100 wall balls for time → log both.\nThen: push press 4×4 heavy · OH hold 3×45s · pull-ups 4×8 easy.'},
+ {d:'Fri',t:'Hybrid',n:'Grind Tolerance',x:'3 rounds: 1km run + 50m sled push (race weight) + 1km run + 25 wall balls. This is the race in miniature — pace the first round.'},
+ {d:'Sun',t:'Run (opt)',n:'Zone 2',x:'50 min conversational.'}]},
+{w:8, block:2, sim:'SIM #3 — Full structure', focus:'Full 8-station rehearsal at ~80% loads. Sequence + transitions are the goal, not the time.', sess:[
+ {d:'Mon',t:'Strength A',n:'Lower (moderate)',x:'Back squat 4×5 @ 78% · RDL 3×8 · Light carries 3×40m'},
+ {d:'Tue',t:'Run',n:'Race-Pace — 6×800m',x:'2km warm-up · 6×800m @ projected race run pace, 90s rest · 1km cool-down'},
+ {d:'Wed',t:'Primer',n:'Light + Mobility',x:'3 easy rounds: 300m ski + 10 wall balls · mobility 20 min.'},
+ {d:'Fri',t:'RACE SIM',n:'Sim #3 — Full Sequence (~80%)',x:'8 × 800m run + ALL 8 stations in race order at ~80% distance/load:\n750m ski · 40m sled push · 40m sled pull · 60m BBJ · 750m row · 150m farmers · 80m lunges · 75 wall balls.\nRehearse: transitions, fueling sip points, pacing plan. Log time.'},
+ {d:'Sun',t:'Recovery',n:'Rest',x:'Full rest.'}]},
+{w:9, block:2, deload:true, focus:'DELOAD #2. You have earned it. Volume −40–50%, all running easy.', sess:[
+ {d:'Mon',t:'Strength A',n:'Deload Lower',x:'Back squat 3×5 @ 65% · light carries 2×40m. 40 min max.'},
+ {d:'Tue',t:'Run',n:'Easy + Strides',x:'35 min easy + 4×20s strides.'},
+ {d:'Wed',t:'Skills',n:'Movement Quality',x:'3 light rounds: ski/row/wall balls · 25 min mobility.'},
+ {d:'Fri',t:'Aerobic',n:'Zone 2 Run',x:'40 min easy, enjoyable route.'},
+ {d:'Sun',t:'Recovery',n:'Rest',x:'Full rest. Plan Block 3 logistics: book race travel, check gear.'}]},
+{w:10, block:3, focus:'Block 3 opens: race weight + race pace, plus final retests. Speed under fatigue.', sess:[
+ {d:'Mon',t:'Strength A',n:'Power + Race-Weight Sled',x:'Back squat 4×4 @ 75% moving fast · KB swing 4×12 · Sled push 4×50m race weight @ race rehearsal pace · Sandbag lunge 2×50m race weight'},
+ {d:'Tue',t:'Run',n:'Race-Pace — 8×600m',x:'2km warm-up · 8×600m @ goal race run pace, 60s rest · 1km cool-down. Short rest = compromised feel.'},
+ {d:'Wed',t:'Stations',n:'RETESTS + Race-Pace Work',x:'RETEST: 100 wall balls for time · (rest 15 min) · 1000m SkiErg for time → log both, compare to W1 baseline.\nThen: OH carry 3×40m · burpee EMOM 6 min (8 quality reps/min).'},
+ {d:'Fri',t:'Hybrid',n:'Race-Pace Rotation',x:'6 rounds: 1km run + 1 station @ full race weight (rotate: ski 500m, sled push 25m, sled pull 25m, row 500m, farmers 100m, wall balls 25). Race-pace discipline on every run.'},
+ {d:'Sun',t:'Run (opt)',n:'Zone 2',x:'40 min conversational.'}]},
+{w:11, block:3, sim:'SIM #4 — FULL DRESS REHEARSAL', focus:'The big one. Full race, race weights, 90–95% effort. Practice everything: fueling, gear, pacing.', sess:[
+ {d:'Mon',t:'Strength A',n:'Speed Lower',x:'Back squat 4×4 @ 72% fast · light accessories · 45 min max.'},
+ {d:'Tue',t:'Run',n:'Race-Pace — 5×1000m',x:'2km warm-up · 5×1000m @ race pace, 75s rest · 1km cool-down'},
+ {d:'Wed',t:'Primer',n:'Light + Mobility',x:'2 easy rounds: 300m ski + 8 wall balls · mobility. Carb up tonight and tomorrow.'},
+ {d:'Fri',t:'RACE SIM',n:'Sim #4 — FULL RACE',x:'Complete HYROX: 8×1km + all 8 stations at full race weights & distances, 90–95% effort.\nWear race shoes/kit. Execute the fueling plan. Log total + EVERY split — this sets your race-day pacing targets.'},
+ {d:'Sun',t:'Recovery',n:'Rest',x:'Full rest. Eat. Review splits vs plan.'}]},
+{w:12, block:3, sim:'SIM #5 — Sharpener', focus:'Taper begins: volume −50%, intensity stays. Friday sharpener should feel CONTROLLED.', sess:[
+ {d:'Mon',t:'Strength A',n:'Crisp Lower',x:'Back squat 3×3 @ 70% crisp and fast · light carries 2×40m. Done in 35 min.'},
+ {d:'Tue',t:'Run',n:'Race-Pace — 6×800m',x:'2km warm-up · 6×800m @ race pace, 90s rest · 1km cool-down'},
+ {d:'Wed',t:'Stations',n:'Roxzone Speed Touch',x:'6 rounds: 400m run + 1 fast short station touch, minimal rest. Rehearse the walk-in/walk-out routine: where you breathe, when you chalk, first 200m reset. Keep it crisp, not crushing.'},
+ {d:'Fri',t:'RACE SIM',n:'Sim #5 — Half, At Race Pace',x:'4 × 1km run + 4 stations @ race weight (ski 1000m, sled push 50m, row 1000m, wall balls 50) AT goal race pace.\nThis should feel smooth and repeatable. If it feels desperate, adjust race-day pacing down 10s/km.'},
+ {d:'Sun',t:'Recovery',n:'Rest',x:'Full rest.'}]},
+{w:13, block:3, race:true, focus:'RACE WEEK. Volume −70%. Short, sharp, springy. Race is SATURDAY 26 Sep — Thu/Fri are carb-load + rest.', sess:[
+ {d:'Mon',t:'Openers',n:'Light Touches',x:'Back squat 3×3 @ 60% · sled push 2×25m light · 2×10 wall balls. 30 min total.'},
+ {d:'Tue',t:'Run',n:'Easy + Strides',x:'20 min easy run + 4×20s strides at race pace feel.'},
+ {d:'Wed',t:'Primer',n:'Race Primer',x:'15 min: 3 × (400m easy run + 10 cal ski). Crisp, short, confidence-building. Last real training touch.'},
+ {d:'Thu',t:'Prep',n:'Rest + Carb Load',x:'Full rest. Carb load begins (6–8 g/kg). Lay out gear using the Race Week checklist. Walk 20 min if antsy.'},
+ {d:'Fri',t:'Prep',n:'Rest + Logistics',x:'Full rest or 10 min shakeout. Carb load continues, lower fibre/fat. Travel + check-in, early night. Hydrate with electrolytes.'},
+ {d:'RACE',t:'🏁',n:'RACE DAY — Sat 26 Sep',x:'Trust the plan. Run 1 slow, first 200m reset after every station, even splits 2–7, empty the tank from Run 8. Enjoy it — you only get one first HYROX.'}]}
+];
+
+const STATIONS = [
+ {n:'1 · SkiErg 1000m', x:'Damper 5–7. Long strokes, hips hinge, legs drive. Target a pace you could hold for 2000m — this is the warm-up station, not a statement.'},
+ {n:'2 · Sled Push 50m', x:'Low arms, locked torso, small fast steps. Break into 4×12.5m mentally. The race destroyer — go in calm, walk the first 200m out if needed.'},
+ {n:'3 · Sled Pull 50m', x:'Lean back, use bodyweight, walk backwards hand-over-hand or rope-to-hip. Save your grip — relax hands on the run after.'},
+ {n:'4 · Burpee Broad Jump 80m', x:'Steady metronome cadence. Step back into the burpee (legal and leg-saving), modest jumps. Rushing here costs you the row.'},
+ {n:'5 · Rowing 1000m', x:'Your recovery station. Damper 5–6, strong but sustainable, long strokes. Breathe, drop HR, drink if needed.'},
+ {n:'6 · Farmers Carry 200m', x:'Fast walk, tall posture, crush grip. Aim unbroken — your 9 gym years make this your strongest station. Bank seconds here.'},
+ {n:'7 · Sandbag Lunges 100m', x:'Bag high on shoulders/traps. Knee kisses floor every rep (no-rep risk). Short controlled steps — quads will scream before wall balls.'},
+ {n:'8 · Wall Balls 100', x:'Plan sets BEFORE you start: e.g. 30-25-20-15-10 with 5-breath rests. Full squat depth, hit the target every rep. Then it is done.'}
+];
+
+const MISTAKES = [
+ {t:'Running Run 1 at your 5k pace', x:'The #1 first-timer error. Fresh legs lie. Every sim, practice starting 20s/km slower than feels right — Run 1 pace should feel almost embarrassing.'},
+ {t:'Treating it as a strength event', x:'With 9 years lifting, your stations will be fine. HYROX is won and lost on the 8km of running — which is currently your limiter at 10km/week. The running progression in this plan is the single most important element. Do not skip Tuesdays.'},
+ {t:'Ignoring the weaknesses you named', x:'Wall balls (overhead endurance + squat volume), burpee broad jumps (gymnastics conditioning) and overhead isometrics are programmed every single week for a reason. The strong lifter who skips the "easy light stuff" walks at the lunges.'},
+ {t:'No station strategy until race day', x:'Knowing your wall ball break-up plan, sled pacing and rope technique before the gun removes 90% of race chaos. That is what the 5 sims are for.'},
+ {t:'Skipping deloads because you feel good', x:'Feeling good in W5/W10 means the plan is working — not that you need more. Fatigue from 25km+ running weeks hides for 2–3 weeks then bites in Block 3.'},
+ {t:'Grip mismanagement', x:'Sled pull → farmers → (later) wall balls all tax grip. Relax your hands on every run, shake arms out in the first 200m. Train carries weekly (programmed).'},
+ {t:'New gear or food on race day', x:'Shoes, socks, shorts, breakfast, gels — all tested in Sim #4 or earlier. Race day = nothing new.'},
+ {t:'Sprinting the roxzone', x:'Transitions matter but sprinting into a station spikes HR right before work. Brisk purposeful walk in, explode in the station, reset walking out.'},
+ {t:'Comparing yourself to racers around you', x:'Open-division waves mix all levels. Someone passing you at Run 2 usually means they blew their pacing, not yours. Race your sim splits.'}
+];
+
+const CHECKLIST = [
+ 'Race shoes (tested in Sim #4) + spare laces','Kit: shorts/top tested in sims, no new fabric','Grip aids if allowed/needed (check current rules)',
+ 'Registration / race pack confirmed, wave start time known','Travel + accommodation locked, arrive day before',
+ 'Pacing plan written down (from Sim #4 splits): target run pace + wall ball break-up','Fuel bag: gels ×2, electrolytes, banana, familiar snacks',
+ 'Carb load executed Fri–Sun (6–8 g/kg)','Hydration + electrolytes through Sunday','Watch charged, lap settings configured',
+ 'Walk the venue / watch an earlier wave if possible','Warm-up plan: 10 min easy jog + leg swings + 2×30s ski + 5 wall balls, done 20 min before start',
+ 'Alarm set, breakfast prepped night before (eat 2.5–3h pre-race)','Early night Saturday AND Sunday — two nights of sleep matter more than one'
+];
+
+const METRICS = [
+ {k:'sim', n:'Race Simulation', type:'time', hint:'mm:ss or h:mm:ss', lower:true},
+ {k:'run5k', n:'5km Run Time Trial', type:'time', hint:'mm:ss', lower:true},
+ {k:'km1', n:'1km Repeat Avg Pace (/km)', type:'time', hint:'mm:ss per km', lower:true},
+ {k:'row1k', n:'1000m Row', type:'time', hint:'mm:ss', lower:true},
+ {k:'ski1k', n:'1000m SkiErg', type:'time', hint:'mm:ss', lower:true},
+ {k:'wb100', n:'100 Wall Balls', type:'time', hint:'mm:ss', lower:true},
+ {k:'sled50', n:'50m Sled Push (race wt)', type:'time', hint:'mm:ss', lower:true},
+ {k:'runvol', n:'Weekly Run Volume', type:'num', unit:'km', hint:'km this week', lower:false},
+ {k:'bw', n:'Bodyweight', type:'num', unit:'kg', hint:'kg', lower:null}
+];
+
+/* =================== STATE =================== */
+let S = {done:{}, bench:{}, check:{}};
+try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
+
+/* =================== HELPERS =================== */
+function fmtDate(d){ return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+function weekDates(w){ const a=new Date(PLAN_START); a.setDate(a.getDate()+(w-1)*7); const b=new Date(a); b.setDate(b.getDate()+6); return fmtDate(a)+' – '+fmtDate(b); }
+function currentWeek(){ const now=new Date(); now.setHours(0,0,0,0); const diff=Math.floor((now-PLAN_START)/(864e5)); if(diff<0) return 0; const w=Math.floor(diff/7)+1; return Math.min(w,14); }
+function parseTime(s){ s=s.trim(); if(!/^\d{1,2}(:\d{2}){1,2}$/.test(s)) return null; const p=s.split(':').map(Number); if(p.some(x=>isNaN(x))) return null; return p.length===2 ? p[0]*60+p[1] : p[0]*3600+p[1]*60+p[2]; }
+function fmtTime(sec){ const h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=Math.round(sec%60); return (h? h+':'+String(m).padStart(2,'0') : m) + ':' + String(s).padStart(2,'0'); }
+function metricVal(m, raw){ return m.type==='time' ? fmtTime(raw) : raw + (m.unit?' '+m.unit:''); }
+
+/* =================== TABS =================== */
+document.getElementById('nav').addEventListener('click', e=>{
+  if(e.target.tagName!=='BUTTON') return;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('tab-'+e.target.dataset.tab).classList.add('active');
+});
+
+/* =================== PLAN RENDER =================== */
+function renderPlan(){
+  const cw = currentWeek();
+  const el = document.getElementById('weeks');
+  const openWeeks = new Set([...el.querySelectorAll('.week.open')].map(d=>d.dataset.w));
+  el.innerHTML = '';
+  WEEKS.forEach(wk=>{
+    const div=document.createElement('div');
+    div.dataset.w=wk.w;
+    div.className='week'+(wk.w===cw?' current':'')+((wk.w===cw&&!el.dataset.init)||openWeeks.has(String(wk.w))?' open':'');
+    el.dataset.init='1';
+    const blk=BLOCKS[wk.block-1];
+    let badges = '<span class="badge '+blk.cls+'">BLOCK '+wk.block+'</span>';
+    if(wk.sim) badges+=' <span class="badge bsim">'+wk.sim+'</span>';
+    if(wk.deload) badges+=' <span class="badge bdel">DELOAD</span>';
+    if(wk.race) badges+=' <span class="badge bsim">RACE WEEK</span>';
+    const doneCount = wk.sess.filter((s,i)=>S.done['w'+wk.w+'s'+i]).length;
+    div.innerHTML = '<div class="whead"><div><div class="wtitle">Week '+wk.w+' · '+weekDates(wk.w)+(wk.w===cw?' <span class="accent">← you are here</span>':'')+'</div>'+
+      '<div class="wmeta">'+wk.focus+'</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+badges+
+      '<span class="muted" style="font-size:12px">'+doneCount+'/'+wk.sess.length+'</span></div></div>'+
+      '<div class="wbody">'+wk.sess.map((s,i)=>{
+        const id='w'+wk.w+'s'+i, done=S.done[id]?' done':'';
+        return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
+          '<div class="day">'+s.d+'</div><div><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+s.x+'</div></div></div>';
+      }).join('')+'</div>';
+    div.querySelector('.whead').addEventListener('click',()=>div.classList.toggle('open'));
+    div.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('click',ev=>ev.stopPropagation());
+      cb.addEventListener('change',ev=>{
+        S.done[ev.target.dataset.id]=ev.target.checked; if(!ev.target.checked) delete S.done[ev.target.dataset.id];
+        save(); renderPlan(); renderDash();
+      });
+    });
+    el.appendChild(div);
+  });
+}
+
+/* =================== DASHBOARD =================== */
+function renderDash(){
+  const now=new Date(); now.setHours(0,0,0,0);
+  const days=Math.round((RACE_DATE-now)/864e5);
+  document.getElementById('d-count').innerHTML = days>0 ? days+'<small> days to go</small>' : (days===0?'RACE DAY 🏁':'DONE 🏁');
+  document.getElementById('d-racedate').textContent='Sat 26 Sep 2026';
+  const cw=currentWeek();
+  const wk=WEEKS.find(w=>w.w===cw);
+  document.getElementById('d-week').innerHTML = cw===0?'Pre-plan<small></small>': cw>13?'Race!<small></small>':cw+'<small> of 13</small>';
+  document.getElementById('d-block').textContent = wk? 'Block '+wk.block+' — '+BLOCKS[wk.block-1].name : (cw===0?'Plan starts Mon 29 Jun':'');
+  document.getElementById('d-focus').textContent = wk? wk.focus : (cw===0? 'Plan starts Monday 29 June. Use Week 1 for baseline tests: 5km TT, 1000m row, 100 wall balls.' : 'Recover, celebrate, and book the next one.');
+  // next sim
+  const nextSim = WEEKS.find(w=>w.sim && w.w>=cw);
+  document.getElementById('d-sim').innerHTML = nextSim ?
+    '<b class="accent">Week '+nextSim.w+' ('+weekDates(nextSim.w)+')</b><br>'+nextSim.sim+' — '+nextSim.sess.find(s=>s.t==='RACE SIM').n :
+    'All sims complete — race day is next!';
+  // completion
+  let total=0, done=0;
+  WEEKS.forEach(w=>w.sess.forEach((s,i)=>{ total++; if(S.done['w'+w.w+'s'+i]) done++; }));
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('d-pct').innerHTML=pct+'<small>%</small>';
+  document.getElementById('d-bar').style.width=pct+'%';
+  // blocks
+  document.getElementById('d-blocks').innerHTML = BLOCKS.map(b=>{
+    let t=0,d=0; WEEKS.filter(w=>w.block===b.n).forEach(w=>w.sess.forEach((s,i)=>{t++; if(S.done['w'+w.w+'s'+i])d++;}));
+    const p=t?Math.round(d/t*100):0;
+    return '<div class="card"><h3>Block '+b.n+' · W'+b.weeks[0]+'–'+b.weeks[1]+'</h3><div style="font-weight:700;margin-bottom:4px">'+b.name+'</div>'+
+      '<div class="muted" style="font-size:12.5px">'+b.desc+'</div><div class="bar"><i style="width:'+p+'%"></i></div><div class="muted" style="font-size:12px;margin-top:4px">'+p+'% complete</div></div>';
+  }).join('');
+  // bench summary
+  const tb=document.querySelector('#d-benchtable tbody');
+  tb.innerHTML = METRICS.map(m=>{
+    const arr=(S.bench[m.k]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    if(!arr.length) return '<tr><td>'+m.n+'</td><td class="muted">—</td><td class="muted">—</td><td class="muted">log it</td></tr>';
+    const first=arr[0], last=arr[arr.length-1];
+    let trend='<span class="muted">—</span>';
+    if(arr.length>1 && m.lower!==null){
+      const diff=last.v-first.v;
+      const better = m.lower ? diff<0 : diff>0;
+      const txt = m.type==='time' ? fmtTime(Math.abs(diff)) : Math.abs(diff).toFixed(1)+(m.unit?' '+m.unit:'');
+      trend='<span class="trend '+(better?'green':'red')+'">'+(better?'▲ ':'▼ ')+txt+(better?' better':' worse')+'</span>';
+    }
+    return '<tr><td>'+m.n+'</td><td><b>'+metricVal(m,last.v)+'</b> <span class="muted" style="font-size:11px">'+last.date+'</span></td><td>'+metricVal(m,first.v)+'</td><td>'+trend+'</td></tr>';
+  }).join('');
+}
+
+/* =================== BENCHMARKS =================== */
+function initBench(){
+  const sel=document.getElementById('b-metric');
+  sel.innerHTML=METRICS.map(m=>'<option value="'+m.k+'">'+m.n+'</option>').join('');
+  sel.addEventListener('change',updateHint);
+  document.getElementById('b-date').value=new Date().toISOString().slice(0,10);
+  updateHint();
+}
+function updateHint(){
+  const m=METRICS.find(x=>x.k===document.getElementById('b-metric').value);
+  document.getElementById('b-hint').textContent='Format: '+m.hint;
+}
+function addBench(){
+  const k=document.getElementById('b-metric').value;
+  const m=METRICS.find(x=>x.k===k);
+  const date=document.getElementById('b-date').value;
+  const raw=document.getElementById('b-value').value.trim();
+  if(!date||!raw){ alert('Enter a date and value.'); return; }
+  let v;
+  if(m.type==='time'){ v=parseTime(raw); if(v===null){ alert('Use mm:ss format (e.g. 4:32).'); return; } }
+  else{ v=parseFloat(raw); if(isNaN(v)){ alert('Enter a number.'); return; } }
+  if(!S.bench[k]) S.bench[k]=[];
+  S.bench[k].push({date:date, v:v});
+  save();
+  document.getElementById('b-value').value='';
+  renderBench(); renderDash();
+}
+function delBench(k,idx){
+  S.bench[k].splice(idx,1); save(); renderBench(); renderDash();
+}
+function chartSVG(arr, m){
+  if(arr.length<2) return '<div class="muted" style="font-size:12.5px;padding:6px 0">Log 2+ entries to see the trend chart.</div>';
+  const W=560,H=150,P=30;
+  const vs=arr.map(a=>a.v);
+  let min=Math.min(...vs), max=Math.max(...vs);
+  if(min===max){min-=1;max+=1;}
+  const pad=(max-min)*0.12; min-=pad; max+=pad;
+  const x=i=>P+(W-2*P)*(arr.length===1?0.5:i/(arr.length-1));
+  const y=v=>H-P-(H-2*P)*((v-min)/(max-min));
+  const pts=arr.map((a,i)=>x(i)+','+y(a.v)).join(' ');
+  const dots=arr.map((a,i)=>'<circle cx="'+x(i)+'" cy="'+y(a.v)+'" r="4" fill="var(--accent)"/>'+
+    '<text x="'+x(i)+'" y="'+(y(a.v)-9)+'" font-size="10" fill="var(--muted)" text-anchor="middle">'+(m.type==='time'?fmtTime(a.v):a.v)+'</text>').join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">'+
+    '<polyline points="'+pts+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>'+dots+
+    '<text x="'+P+'" y="'+(H-6)+'" font-size="10" fill="var(--muted)">'+arr[0].date+'</text>'+
+    '<text x="'+(W-P)+'" y="'+(H-6)+'" font-size="10" fill="var(--muted)" text-anchor="end">'+arr[arr.length-1].date+'</text></svg>';
+}
+function renderBench(){
+  const el=document.getElementById('b-cards');
+  el.innerHTML=METRICS.map(m=>{
+    const arr=(S.bench[m.k]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    if(!arr.length) return '';
+    const rows=arr.map((a,i)=>'<tr><td>'+a.date+'</td><td><b>'+metricVal(m,a.v)+'</b></td>'+
+      '<td style="text-align:right"><button class="btn danger" onclick="delBench(\''+m.k+'\','+i+')">✕</button></td></tr>').join('');
+    return '<div class="card" style="margin-bottom:14px"><h3>'+m.n+'</h3><div class="chartbox">'+chartSVG(arr,m)+'</div>'+
+      '<table style="margin-top:8px"><thead><tr><th>Date</th><th>Result</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }).join('') || '<div class="card muted">No results logged yet. Start with Week 1 baselines: 5km TT, 1000m row, 100 wall balls.</div>';
+}
+
+/* =================== EXPORT / IMPORT =================== */
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='hyrox-progress-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+}
+function importData(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{}},JSON.parse(r.result)); save(); renderAll(); alert('Data imported.'); }catch(e){ alert('Invalid file.'); } };
+  r.readAsText(f);
+}
+
+/* =================== STATIC LISTS =================== */
+function renderStatic(){
+  document.getElementById('stations').innerHTML=STATIONS.map(s=>'<div class="card"><div style="font-weight:700;margin-bottom:6px">'+s.n+'</div><div class="muted" style="font-size:13px">'+s.x+'</div></div>').join('');
+  document.getElementById('mistakes-list').innerHTML=MISTAKES.map(m=>'<div class="card mistake"><div style="font-weight:700;margin-bottom:4px">'+m.t+'</div><div class="muted" style="font-size:13.5px">'+m.x+'</div></div>').join('');
+  renderChecklist();
+}
+function renderChecklist(){
+  const el=document.getElementById('checklist');
+  el.innerHTML=CHECKLIST.map((c,i)=>'<li class="'+(S.check[i]?'done':'')+'"><input type="checkbox" data-i="'+i+'" '+(S.check[i]?'checked':'')+'><span>'+c+'</span></li>').join('');
+  el.querySelectorAll('input').forEach(cb=>cb.addEventListener('change',e=>{
+    S.check[e.target.dataset.i]=e.target.checked; if(!e.target.checked) delete S.check[e.target.dataset.i];
+    save(); renderChecklist();
+  }));
+}
+function resetChecklist(){ S.check={}; save(); renderChecklist(); }
+
+function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); }
+initBench(); renderAll();
+</script>
+<script>
+/* =================== PWA: offline + install =================== */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+let deferredPrompt=null;
+const installBtn=document.getElementById('installBtn');
+const iosHint=document.getElementById('iosHint');
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault(); deferredPrompt=e;
+  if(installBtn) installBtn.style.display='inline-block';
+});
+if(installBtn){
+  installBtn.addEventListener('click', async ()=>{
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt=null; installBtn.style.display='none';
+  });
+}
+window.addEventListener('appinstalled', ()=>{ if(installBtn) installBtn.style.display='none'; });
+// iOS Safari has no install prompt — show a hint instead (only when not already installed)
+(function(){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+  if(isIOS && !standalone && iosHint) iosHint.style.display='block';
+})();
+</script>
+</body>
+</html>
