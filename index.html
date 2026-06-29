@@ -95,6 +95,27 @@ ul.clean li b{color:var(--accent)}
 .mistake{border-left:3px solid var(--red)}
 footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);font-size:12px}
 @media(max-width:600px){.big{font-size:26px}}
+/* weight hints + logging + lifts */
+.wt{color:var(--accent);font-weight:700;white-space:nowrap}
+.logbtn{background:transparent;color:var(--blue);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px}
+.logbtn.has{color:var(--green);border-color:var(--green)}
+.logger{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;display:none}
+.logger.open{display:block}
+.logex{padding:9px 0;border-bottom:1px solid var(--line)}
+.logex:last-child{border-bottom:none}
+.logex .lx{font-size:13px;font-weight:600;margin-bottom:6px}
+.logfields{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.logfields label{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.logfields input{padding:7px 9px;font-size:14px;width:104px}
+.logfields input.sets{width:70px}
+.tgt{font-size:11.5px;color:var(--muted);padding-bottom:8px}
+.lift-row{display:flex;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.lift-row:last-child{border-bottom:none}
+.lift-row .ln{font-weight:700;font-size:14px;flex:1;min-width:140px}
+.lift-row input{width:120px}
+.pcttable{font-size:12.5px;margin-top:2px}
+.pcttable td,.pcttable th{padding:6px 9px;white-space:nowrap}
+.pct-on{color:var(--accent);font-weight:700}
 </style>
 </head>
 <body>
@@ -110,6 +131,7 @@ footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);fon
   <button data-tab="dash" class="active">Dashboard</button>
   <button data-tab="plan">Training Plan</button>
   <button data-tab="bench">Benchmarks</button>
+  <button data-tab="lifts">Lifts &amp; 1RM</button>
   <button data-tab="strategy">Race Strategy</button>
   <button data-tab="recovery">Recovery</button>
   <button data-tab="raceweek">Race Week</button>
@@ -158,6 +180,18 @@ footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);fon
     <button class="btn ghost" onclick="document.getElementById('importfile').click()">Import data</button>
     <input type="file" id="importfile" accept=".json" style="display:none" onchange="importData(event)">
   </div>
+</section>
+
+<!-- ============ LIFTS / 1RM ============ -->
+<section class="tab" id="tab-lifts">
+  <div class="note"><b>1RM → working weights.</b> Enter your current 1-rep maxes below. The app uses them to auto-calculate the kg for every <b>% prescription</b> in your Training Plan (e.g. "Back squat 4×6 @ 70–75%" will show your actual load). Update them whenever you retest.</div>
+  <div class="card">
+    <h3>Your 1-rep maxes (kg)</h3>
+    <div id="lift-inputs" style="margin-top:6px"></div>
+  </div>
+  <h2 class="sec">Percentage reference</h2>
+  <div class="card"><div id="pct-table"></div>
+  <div class="muted" style="font-size:12px;margin-top:10px">Rounded to the nearest 2.5 kg. Set a 1RM above to populate this table.</div></div>
 </section>
 
 <!-- ============ STRATEGY ============ -->
@@ -375,7 +409,7 @@ const METRICS = [
 ];
 
 /* =================== STATE =================== */
-let S = {done:{}, bench:{}, check:{}};
+let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -383,6 +417,38 @@ function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch
 function fmtDate(d){ return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
 function weekDates(w){ const a=new Date(PLAN_START); a.setDate(a.getDate()+(w-1)*7); const b=new Date(a); b.setDate(b.getDate()+6); return fmtDate(a)+' – '+fmtDate(b); }
 function currentWeek(){ const now=new Date(); now.setHours(0,0,0,0); const diff=Math.floor((now-PLAN_START)/(864e5)); if(diff<0) return 0; const w=Math.floor(diff/7)+1; return Math.min(w,14); }
+
+/* =================== LIFTS & 1RM =================== */
+const LIFTS = [
+  {k:'squat',     n:'Back Squat',            aliases:['back squat','front squat','box squat','squat']},
+  {k:'deadlift',  n:'Deadlift',              aliases:['deadlift']},
+  {k:'bench',     n:'Bench Press',           aliases:['bench']},
+  {k:'pushpress', n:'Push Press',            aliases:['push press']},
+  {k:'ohp',       n:'Overhead / Strict Press',aliases:['overhead press','strict press','ohp']},
+  {k:'hipthrust', n:'Hip Thrust',            aliases:['hip thrust']}
+];
+function round2_5(x){ return Math.round(x/2.5)*2.5; }
+function fmtKg(x){ return (Math.round(x*10)/10).toString().replace(/\.0$/,''); }
+function detectLift(text){ const t=text.toLowerCase(); for(const L of LIFTS){ for(const a of L.aliases){ if(t.includes(a)) return L; } } return null; }
+function splitItems(line){ return line.split('·').map(s=>s.trim()).filter(Boolean); }
+// annotate a description string: append computed kg after "@ X%" / "@ X–Y%" where a lift 1RM is known
+function annotateDesc(x){
+  return x.split('\n').map(line => splitItems(line).map(item=>{
+    const L=detectLift(item);
+    const m=item.match(/@\s*(\d+(?:\.\d+)?)\s*(?:[–\-]\s*(\d+(?:\.\d+)?))?\s*%/);
+    if(L && m && S.oneRM[L.k] && parseFloat(S.oneRM[L.k])>0){
+      const rm=parseFloat(S.oneRM[L.k]);
+      const lo=round2_5(rm*parseFloat(m[1])/100);
+      const hi=m[2]?round2_5(rm*parseFloat(m[2])/100):null;
+      const w=hi!==null ? fmtKg(lo)+'–'+fmtKg(hi)+' kg' : fmtKg(lo)+' kg';
+      return item+' <span class="wt">→ '+w+'</span>';
+    }
+    return item;
+  }).join(' · ')).join('\n');
+}
+// resistance items in a session (have an "N×M" marker)
+function loggableItems(x){ const out=[]; x.split('\n').forEach(line=>splitItems(line).forEach(it=>{ if(/\d+\s*[×x]\s*\d/.test(it)) out.push(it); })); return out; }
+function prescSets(item){ const m=item.match(/(\d+)\s*[×x]/); return m?parseInt(m[1],10):''; }
 function parseTime(s){ s=s.trim(); if(!/^\d{1,2}(:\d{2}){1,2}$/.test(s)) return null; const p=s.split(':').map(Number); if(p.some(x=>isNaN(x))) return null; return p.length===2 ? p[0]*60+p[1] : p[0]*3600+p[1]*60+p[2]; }
 function fmtTime(sec){ const h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=Math.round(sec%60); return (h? h+':'+String(m).padStart(2,'0') : m) + ':' + String(s).padStart(2,'0'); }
 function metricVal(m, raw){ return m.type==='time' ? fmtTime(raw) : raw + (m.unit?' '+m.unit:''); }
@@ -401,6 +467,7 @@ function renderPlan(){
   const cw = currentWeek();
   const el = document.getElementById('weeks');
   const openWeeks = new Set([...el.querySelectorAll('.week.open')].map(d=>d.dataset.w));
+  const openLoggers = new Set([...el.querySelectorAll('.logger.open')].map(d=>d.dataset.loggerfor));
   el.innerHTML = '';
   WEEKS.forEach(wk=>{
     const div=document.createElement('div');
@@ -418,8 +485,19 @@ function renderPlan(){
       '<span class="muted" style="font-size:12px">'+doneCount+'/'+wk.sess.length+'</span></div></div>'+
       '<div class="wbody">'+wk.sess.map((s,i)=>{
         const id='w'+wk.w+'s'+i, done=S.done[id]?' done':'';
+        const isLift=/Strength|Stations|Openers|Primer/.test(s.t);
+        const items=isLift?loggableItems(s.x):[];
+        const anyLog=items.some((it,j)=>{ const r=S.log[id+'x'+j]; return r&&(r.w||r.sets); });
+        const logBtn=items.length?'<button class="logbtn'+(anyLog?' has':'')+'" data-log="'+id+'">'+(anyLog?'✓ ':'')+'Log sets & weights</button>':'';
+        const logger=items.length?'<div class="logger'+(openLoggers.has(id)?' open':'')+'" data-loggerfor="'+id+'">'+items.map((it,j)=>{
+            const r=S.log[id+'x'+j]||{}, tgt=prescSets(it);
+            return '<div class="logex"><div class="lx">'+annotateDesc(it)+'</div><div class="logfields">'+
+              '<label>Weight<input type="text" data-lk="'+id+'x'+j+'" data-f="w" value="'+(r.w||'')+'" placeholder="kg"></label>'+
+              '<label>Sets done<input class="sets" type="number" inputmode="numeric" data-lk="'+id+'x'+j+'" data-f="sets" value="'+(r.sets||'')+'" placeholder="'+(tgt||'')+'"></label>'+
+              (tgt?'<span class="tgt">target '+tgt+' sets</span>':'')+'</div></div>';
+          }).join('')+'</div>':'';
         return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
-          '<div class="day">'+s.d+'</div><div><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+s.x+'</div></div></div>';
+          '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+logger+'</div></div>';
       }).join('')+'</div>';
     div.querySelector('.whead').addEventListener('click',()=>div.classList.toggle('open'));
     div.querySelectorAll('input[type=checkbox]').forEach(cb=>{
@@ -427,6 +505,22 @@ function renderPlan(){
       cb.addEventListener('change',ev=>{
         S.done[ev.target.dataset.id]=ev.target.checked; if(!ev.target.checked) delete S.done[ev.target.dataset.id];
         save(); renderPlan(); renderDash();
+      });
+    });
+    div.querySelectorAll('.logbtn').forEach(b=>{
+      b.addEventListener('click',ev=>{ ev.stopPropagation(); const lg=div.querySelector('.logger[data-loggerfor="'+b.dataset.log+'"]'); if(lg) lg.classList.toggle('open'); });
+    });
+    div.querySelectorAll('.logger input').forEach(inp=>{
+      inp.addEventListener('click',ev=>ev.stopPropagation());
+      inp.addEventListener('change',()=>{
+        const key=inp.dataset.lk, f=inp.dataset.f, v=inp.value.trim();
+        if(!S.log[key]) S.log[key]={};
+        if(v) S.log[key][f]=v; else delete S.log[key][f];
+        if(!S.log[key].w && !S.log[key].sets) delete S.log[key];
+        save();
+        const lid=inp.closest('.logger').dataset.loggerfor;
+        const btn=div.querySelector('.logbtn[data-log="'+lid+'"]');
+        if(btn){ const any=[...div.querySelectorAll('.logger[data-loggerfor="'+lid+'"] input')].some(x=>x.value.trim()); btn.classList.toggle('has',any); btn.textContent=(any?'✓ ':'')+'Log sets & weights'; }
       });
     });
     el.appendChild(div);
@@ -547,7 +641,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{}},JSON.parse(r.result)); save(); renderAll(); alert('Data imported.'); }catch(e){ alert('Invalid file.'); } };
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{}},JSON.parse(r.result)); save(); renderAll(); alert('Data imported.'); }catch(e){ alert('Invalid file.'); } };
   r.readAsText(f);
 }
 
@@ -567,7 +661,34 @@ function renderChecklist(){
 }
 function resetChecklist(){ S.check={}; save(); renderChecklist(); }
 
-function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); }
+/* =================== LIFTS / 1RM TAB =================== */
+function renderLifts(){
+  const wrap=document.getElementById('lift-inputs');
+  if(!wrap) return;
+  wrap.innerHTML=LIFTS.map(L=>{
+    const v=S.oneRM[L.k]||'';
+    return '<div class="lift-row"><span class="ln">'+L.n+'</span>'+
+      '<input type="number" inputmode="decimal" step="2.5" data-rm="'+L.k+'" value="'+v+'" placeholder="—"><span class="muted" style="font-size:12px">kg</span></div>';
+  }).join('');
+  wrap.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{
+    const k=inp.dataset.rm, v=inp.value.trim();
+    if(v && parseFloat(v)>0) S.oneRM[k]=v; else delete S.oneRM[k];
+    save(); renderPctTable(); renderPlan();
+  }));
+  renderPctTable();
+}
+function renderPctTable(){
+  const el=document.getElementById('pct-table'); if(!el) return;
+  const set=LIFTS.filter(L=>S.oneRM[L.k] && parseFloat(S.oneRM[L.k])>0);
+  if(!set.length){ el.innerHTML='<div class="muted" style="font-size:13px">No 1RMs entered yet — add one above to see your working weights.</div>'; return; }
+  const pcts=[60,65,70,75,80,85,90,95,100];
+  el.innerHTML='<div style="overflow-x:auto"><table class="pcttable"><thead><tr><th>Lift</th>'+pcts.map(p=>'<th>'+p+'%</th>').join('')+'</tr></thead><tbody>'+
+    set.map(L=>{ const rm=parseFloat(S.oneRM[L.k]);
+      return '<tr><td><b>'+L.n+'</b></td>'+pcts.map(p=>'<td'+(p===100?' class="pct-on"':'')+'>'+fmtKg(round2_5(rm*p/100))+'</td>').join('')+'</tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); renderLifts(); }
 initBench(); renderAll();
 </script>
 <script>
