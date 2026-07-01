@@ -116,6 +116,37 @@ footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);fon
 .pcttable{font-size:12.5px;margin-top:2px}
 .pcttable td,.pcttable th{padding:6px 9px;white-space:nowrap}
 .pct-on{color:var(--accent);font-weight:700}
+/* plan sub-navigation (block -> week) */
+.subnav{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px}
+.subnav.wk{margin:2px 0 16px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.subnav button{background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex:0 0 auto}
+.subnav button.active{background:var(--accent);color:#111;border-color:var(--accent)}
+.subnav button .mini{font-size:10px;font-weight:700;opacity:.75;margin-left:6px;text-transform:uppercase;letter-spacing:.4px}
+.wv-head{margin:2px 0 14px}
+.wv-head .wv-title{font-size:18px;font-weight:800}
+.wv-head .wv-focus{color:var(--muted);font-size:13.5px;margin-top:4px}
+.wv-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+/* per-set logging */
+.setrow-target{font-size:11.5px;color:var(--muted);margin:2px 0 6px}
+.setgrid{display:grid;grid-template-columns:26px 1fr 1fr 1fr;gap:7px 8px;align-items:center}
+.setgrid .sh{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.setgrid .snum{font-weight:800;font-size:12px;color:var(--accent);text-align:center}
+.setgrid input{padding:8px 7px;font-size:14px;width:100%}
+.addset{background:transparent;color:var(--blue);border:1px dashed var(--line);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.e1rm{margin-top:10px;font-size:12.5px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.e1rm b{color:var(--green)}
+.setas{background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:7px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer}
+.demobtn{background:transparent;color:var(--blue);border:1px solid var(--line);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-block}
+/* video modal */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.74);z-index:50;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modalbox{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:18px}
+.modalbox h3{font-size:15px;margin-bottom:12px}
+.vidframe{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;margin-bottom:12px}
+.vidframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pinrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pinrow input{flex:1;min-width:180px}
+.modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 </style>
 </head>
 <body>
@@ -158,8 +189,10 @@ footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);fon
 
 <!-- ============ PLAN ============ -->
 <section class="tab" id="tab-plan">
-  <div class="note"><b>How to use:</b> tick sessions as you complete them — the dashboard tracks your progress. Tap a week to expand. Core days: <b>Mon, Tue, Wed, Fri</b> + 1 optional Sun Zone-2 day. The <b>Friday</b> Hybrid/sim session can slide to <b>Saturday</b> on weeks Friday won't work (Thursday is your rest buffer either way). Deloads are planned, not optional. <b>SIM</b> weeks contain a race simulation (log the time in Benchmarks).</div>
-  <div id="weeks"></div>
+  <div class="note"><b>How to use:</b> pick a <b>block</b>, then a <b>week</b> — you'll see just that week's sessions. Tick each session as you finish it. On strength days tap <b>Log working sets</b> to record weight, reps &amp; RPE per set; your best set gives an estimated 1RM you can push to the Lifts tab. Tap <b>▶ demo</b> on any exercise for form videos. Core days: Mon, Tue, Wed, Fri (+ optional Sun Zone-2); Friday can slide to Saturday.</div>
+  <div id="block-nav" class="subnav"></div>
+  <div id="week-nav" class="subnav wk"></div>
+  <div id="week-view"></div>
 </section>
 
 <!-- ============ BENCHMARKS ============ -->
@@ -192,6 +225,9 @@ footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);fon
   <h2 class="sec">Percentage reference</h2>
   <div class="card"><div id="pct-table"></div>
   <div class="muted" style="font-size:12px;margin-top:10px">Rounded to the nearest 2.5 kg. Set a 1RM above to populate this table.</div></div>
+  <h2 class="sec">Exercise form demos</h2>
+  <div class="card"><div class="muted" style="font-size:12.5px;margin-bottom:10px">Tap a movement for form-demo videos. Pin your favourite in the popup and it embeds next time. There's also a <b>▶ demo</b> button on every logged exercise in the plan.</div>
+  <div id="demo-lib"></div></div>
 </section>
 
 <!-- ============ STRATEGY ============ -->
@@ -265,6 +301,15 @@ footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);fon
   <h2 class="sec">Common mistakes at your level</h2>
   <div id="mistakes-list" class="grid" style="grid-template-columns:1fr"></div>
 </section>
+</div>
+
+<div class="modal" id="vidModal" onclick="if(event.target===this)closeDemo()">
+  <div class="modalbox">
+    <h3 id="vidTitle">Form demo</h3>
+    <div id="vidBody"></div>
+    <div class="pinrow"><input type="text" id="vidUrl" placeholder="Paste a YouTube link to pin…"><button class="btn" onclick="pinDemo()">Pin</button></div>
+    <div class="modal-actions"><button class="btn ghost" id="vidRemove" style="display:none" onclick="unpinDemo()">Remove pinned</button><button class="btn ghost" onclick="closeDemo()">Close</button></div>
+  </div>
 </div>
 
 <footer>Built for Raha · 13-week HYROX prep · Data saved locally in this browser (use Export to back up). Not medical advice — listen to your body.</footer>
@@ -409,7 +454,7 @@ const METRICS = [
 ];
 
 /* =================== STATE =================== */
-let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}};
+let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -462,69 +507,151 @@ document.getElementById('nav').addEventListener('click', e=>{
   document.getElementById('tab-'+e.target.dataset.tab).classList.add('active');
 });
 
-/* =================== PLAN RENDER =================== */
+/* =============== PROGRESSION + VIDEO HELPERS =============== */
+let planView = null;          // {block, week}
+let openLoggers = new Set();  // session ids with logger expanded
+let demoMove = '';            // movement currently in the video modal
+const DEMO_LIB = ['SkiErg','Sled Push','Sled Pull','Burpee Broad Jump','Rowing','Farmers Carry','Sandbag Lunges','Wall Balls','Back Squat','Deadlift','Romanian Deadlift','Bench Press','Push Press','Overhead Press','Pull-up','Hip Thrust','Kettlebell Swing'];
+
+function epley(w,reps){ return w*(1+reps/30); }
+function prescReps(item){ const m=item.match(/\d+\s*[×x]\s*(\d+)/); return m?parseInt(m[1],10):''; }
+function prescWeight(item){ const L=detectLift(item); const m=item.match(/@\s*(\d+(?:\.\d+)?)/); if(L&&m&&S.oneRM[L.k]&&parseFloat(S.oneRM[L.k])>0) return round2_5(parseFloat(S.oneRM[L.k])*parseFloat(m[1])/100); return ''; }
+function movementName(item){ const m=item.match(/^(.*?)(?=\s\d+\s*[×x])/); let s=(m?m[1]:item).trim(); return s.replace(/[·:,+\-]+$/,'').trim(); }
+function movementKey(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+function ytSearch(name){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent(name+' proper form technique'); }
+function ytEmbed(url){ if(!url) return null; let id=null,m;
+  if(m=url.match(/[?&]v=([\w-]{11})/)) id=m[1];
+  else if(m=url.match(/youtu\.be\/([\w-]{11})/)) id=m[1];
+  else if(m=url.match(/\/embed\/([\w-]{11})/)) id=m[1];
+  else if(m=url.match(/shorts\/([\w-]{11})/)) id=m[1];
+  return id?'https://www.youtube.com/embed/'+id:null;
+}
+function exerciseE1RM(key){ const r=S.log[key]; if(!(r&&Array.isArray(r.sets))) return null; let best=0; r.sets.forEach(s=>{ const w=parseFloat(s.w),reps=parseFloat(s.reps); if(w>0&&reps>0){ const e=epley(w,reps); if(e>best)best=e; } }); return best>0?best:null; }
+function logHasData(key){ const r=S.log[key]; return r&&Array.isArray(r.sets)&&r.sets.some(s=>s.w||s.reps||s.rpe); }
+
+/* =================== VIDEO DEMO MODAL =================== */
+function openDemo(name){
+  demoMove=name; const key=movementKey(name);
+  const url=S.videos[key]||''; const emb=ytEmbed(url);
+  document.getElementById('vidTitle').textContent=name+' — form demo';
+  let html='';
+  if(emb) html+='<div class="vidframe"><iframe src="'+emb+'" allowfullscreen loading="lazy"></iframe></div>';
+  else html+='<div class="muted" style="font-size:13px;margin-bottom:10px">No video pinned yet. Open a YouTube search for form demos, then paste your favourite link below to pin it here for next time.</div>';
+  html+='<a class="btn ghost" style="text-decoration:none;display:inline-block" href="'+ytSearch(name)+'" target="_blank" rel="noopener">▶ Open YouTube search</a>';
+  document.getElementById('vidBody').innerHTML=html;
+  document.getElementById('vidUrl').value=url;
+  document.getElementById('vidRemove').style.display=emb?'inline-block':'none';
+  document.getElementById('vidModal').classList.add('open');
+}
+function closeDemo(){ document.getElementById('vidModal').classList.remove('open'); }
+function pinDemo(){
+  const url=document.getElementById('vidUrl').value.trim(), key=movementKey(demoMove);
+  if(!url){ delete S.videos[key]; save(); openDemo(demoMove); return; }
+  if(!ytEmbed(url)){ alert('Please paste a valid YouTube link (youtube.com/watch?v=… or youtu.be/…).'); return; }
+  S.videos[key]=url; save(); openDemo(demoMove); renderWeekView();
+}
+function unpinDemo(){ const key=movementKey(demoMove); delete S.videos[key]; save(); openDemo(demoMove); renderWeekView(); }
+function renderDemoLib(){ const el=document.getElementById('demo-lib'); if(!el) return;
+  el.innerHTML=DEMO_LIB.map(n=>'<button class="demobtn" data-demo="'+n+'" style="margin:0 8px 8px 0;padding:5px 11px">▶ '+n+'</button>').join('');
+  el.querySelectorAll('.demobtn').forEach(b=>b.addEventListener('click',()=>openDemo(b.dataset.demo)));
+}
+
+/* =================== PLAN RENDER (block → week) =================== */
 function renderPlan(){
-  const cw = currentWeek();
-  const el = document.getElementById('weeks');
-  const openWeeks = new Set([...el.querySelectorAll('.week.open')].map(d=>d.dataset.w));
-  const openLoggers = new Set([...el.querySelectorAll('.logger.open')].map(d=>d.dataset.loggerfor));
-  el.innerHTML = '';
-  WEEKS.forEach(wk=>{
-    const div=document.createElement('div');
-    div.dataset.w=wk.w;
-    div.className='week'+(wk.w===cw?' current':'')+((wk.w===cw&&!el.dataset.init)||openWeeks.has(String(wk.w))?' open':'');
-    el.dataset.init='1';
-    const blk=BLOCKS[wk.block-1];
-    let badges = '<span class="badge '+blk.cls+'">BLOCK '+wk.block+'</span>';
-    if(wk.sim) badges+=' <span class="badge bsim">'+wk.sim+'</span>';
-    if(wk.deload) badges+=' <span class="badge bdel">DELOAD</span>';
-    if(wk.race) badges+=' <span class="badge bsim">RACE WEEK</span>';
-    const doneCount = wk.sess.filter((s,i)=>S.done['w'+wk.w+'s'+i]).length;
-    div.innerHTML = '<div class="whead"><div><div class="wtitle">Week '+wk.w+' · '+weekDates(wk.w)+(wk.w===cw?' <span class="accent">← you are here</span>':'')+'</div>'+
-      '<div class="wmeta">'+wk.focus+'</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+badges+
-      '<span class="muted" style="font-size:12px">'+doneCount+'/'+wk.sess.length+'</span></div></div>'+
-      '<div class="wbody">'+wk.sess.map((s,i)=>{
-        const id='w'+wk.w+'s'+i, done=S.done[id]?' done':'';
-        const isLift=/Strength|Stations|Openers|Primer/.test(s.t);
-        const items=isLift?loggableItems(s.x):[];
-        const anyLog=items.some((it,j)=>{ const r=S.log[id+'x'+j]; return r&&(r.w||r.sets); });
-        const logBtn=items.length?'<button class="logbtn'+(anyLog?' has':'')+'" data-log="'+id+'">'+(anyLog?'✓ ':'')+'Log sets & weights</button>':'';
-        const logger=items.length?'<div class="logger'+(openLoggers.has(id)?' open':'')+'" data-loggerfor="'+id+'">'+items.map((it,j)=>{
-            const r=S.log[id+'x'+j]||{}, tgt=prescSets(it);
-            return '<div class="logex"><div class="lx">'+annotateDesc(it)+'</div><div class="logfields">'+
-              '<label>Weight<input type="text" data-lk="'+id+'x'+j+'" data-f="w" value="'+(r.w||'')+'" placeholder="kg"></label>'+
-              '<label>Sets done<input class="sets" type="number" inputmode="numeric" data-lk="'+id+'x'+j+'" data-f="sets" value="'+(r.sets||'')+'" placeholder="'+(tgt||'')+'"></label>'+
-              (tgt?'<span class="tgt">target '+tgt+' sets</span>':'')+'</div></div>';
-          }).join('')+'</div>':'';
-        return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
-          '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+logger+'</div></div>';
-      }).join('')+'</div>';
-    div.querySelector('.whead').addEventListener('click',()=>div.classList.toggle('open'));
-    div.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-      cb.addEventListener('click',ev=>ev.stopPropagation());
-      cb.addEventListener('change',ev=>{
-        S.done[ev.target.dataset.id]=ev.target.checked; if(!ev.target.checked) delete S.done[ev.target.dataset.id];
-        save(); renderPlan(); renderDash();
-      });
-    });
-    div.querySelectorAll('.logbtn').forEach(b=>{
-      b.addEventListener('click',ev=>{ ev.stopPropagation(); const lg=div.querySelector('.logger[data-loggerfor="'+b.dataset.log+'"]'); if(lg) lg.classList.toggle('open'); });
-    });
-    div.querySelectorAll('.logger input').forEach(inp=>{
-      inp.addEventListener('click',ev=>ev.stopPropagation());
-      inp.addEventListener('change',()=>{
-        const key=inp.dataset.lk, f=inp.dataset.f, v=inp.value.trim();
-        if(!S.log[key]) S.log[key]={};
-        if(v) S.log[key][f]=v; else delete S.log[key][f];
-        if(!S.log[key].w && !S.log[key].sets) delete S.log[key];
-        save();
-        const lid=inp.closest('.logger').dataset.loggerfor;
-        const btn=div.querySelector('.logbtn[data-log="'+lid+'"]');
-        if(btn){ const any=[...div.querySelectorAll('.logger[data-loggerfor="'+lid+'"] input')].some(x=>x.value.trim()); btn.classList.toggle('has',any); btn.textContent=(any?'✓ ':'')+'Log sets & weights'; }
-      });
-    });
-    el.appendChild(div);
+  const cw=currentWeek();
+  if(!planView){ const sw=(cw>=1&&cw<=13)?cw:1; const w0=WEEKS.find(w=>w.w===sw); planView={block:w0.block, week:sw}; }
+  renderBlockNav(); renderWeekNav(); renderWeekView();
+}
+function renderBlockNav(){
+  const el=document.getElementById('block-nav'); if(!el) return;
+  el.innerHTML=BLOCKS.map(b=>'<button data-b="'+b.n+'" class="'+(b.n===planView.block?'active':'')+'">Block '+b.n+'<span class="mini">'+b.name+'</span></button>').join('');
+  el.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{ const b=+btn.dataset.b; planView.block=b; planView.week=WEEKS.find(w=>w.block===b).w; renderPlan(); }));
+}
+function renderWeekNav(){
+  const el=document.getElementById('week-nav'); if(!el) return;
+  const cw=currentWeek();
+  el.innerHTML=WEEKS.filter(w=>w.block===planView.block).map(w=>{
+    const tag=w.sim?'SIM':(w.deload?'DELOAD':(w.race?'RACE':''));
+    return '<button data-w="'+w.w+'" class="'+(w.w===planView.week?'active':'')+'">Wk '+w.w+(w.w===cw?' •':'')+(tag?'<span class="mini">'+tag+'</span>':'')+'</button>';
+  }).join('');
+  el.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{ planView.week=+btn.dataset.w; renderWeekNav(); renderWeekView(); }));
+}
+function renderWeekView(){
+  const el=document.getElementById('week-view'); if(!el) return;
+  const cw=currentWeek(), wk=WEEKS.find(w=>w.w===planView.week);
+  if(!wk){ el.innerHTML=''; return; }
+  const blk=BLOCKS[wk.block-1];
+  let badges='<span class="badge '+blk.cls+'">BLOCK '+wk.block+'</span>';
+  if(wk.sim) badges+=' <span class="badge bsim">'+wk.sim+'</span>';
+  if(wk.deload) badges+=' <span class="badge bdel">DELOAD</span>';
+  if(wk.race) badges+=' <span class="badge bsim">RACE WEEK</span>';
+  const doneCount=wk.sess.filter((s,i)=>S.done['w'+wk.w+'s'+i]).length;
+  let html='<div class="wv-head"><div class="wv-title">Week '+wk.w+' · '+weekDates(wk.w)+(wk.w===cw?' <span class="accent">← this week</span>':'')+'</div>'+
+    '<div class="wv-focus">'+wk.focus+'</div><div class="wv-badges">'+badges+'<span class="muted" style="font-size:12px;align-self:center">'+doneCount+'/'+wk.sess.length+' done</span></div></div>';
+  html+=wk.sess.map((s,i)=>renderSession(wk,s,i)).join('');
+  el.innerHTML=html;
+  wireWeekView(el);
+}
+function renderSession(wk,s,i){
+  const id='w'+wk.w+'s'+i, done=S.done[id]?' done':'';
+  const isLift=/Strength|Stations|Openers|Primer/.test(s.t);
+  const items=isLift?loggableItems(s.x):[];
+  const anyLog=items.some((it,j)=>logHasData(id+'x'+j));
+  const logBtn=items.length?'<button class="logbtn'+(anyLog?' has':'')+'" data-log="'+id+'">'+(anyLog?'✓ ':'')+'Log working sets</button>':'';
+  const logger=items.length?'<div class="logger'+(openLoggers.has(id)?' open':'')+'">'+items.map((it,j)=>renderExercise(id,it,j)).join('')+'</div>':'';
+  return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
+    '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+logger+'</div></div>';
+}
+function renderExercise(id,item,j){
+  const key=id+'x'+j;
+  const tgtSets=prescSets(item)||1, tgtReps=prescReps(item), pw=prescWeight(item), name=movementName(item);
+  const sets=(S.log[key]&&Array.isArray(S.log[key].sets))?S.log[key].sets:Array.from({length:tgtSets},()=>({w:'',reps:'',rpe:''}));
+  let rows='<div class="setgrid"><span class="sh"></span><span class="sh">Weight kg</span><span class="sh">Reps</span><span class="sh">RPE</span>';
+  sets.forEach((st,k)=>{
+    rows+='<span class="snum">'+(k+1)+'</span>'+
+      '<input type="number" inputmode="decimal" step="2.5" data-key="'+key+'" data-idx="'+k+'" data-f="w" data-tgt="'+tgtSets+'" value="'+(st.w||'')+'" placeholder="'+(pw!==''?fmtKg(pw):'–')+'">'+
+      '<input type="number" inputmode="numeric" data-key="'+key+'" data-idx="'+k+'" data-f="reps" data-tgt="'+tgtSets+'" value="'+(st.reps||'')+'" placeholder="'+(tgtReps||'–')+'">'+
+      '<input type="number" inputmode="decimal" step="0.5" data-key="'+key+'" data-idx="'+k+'" data-f="rpe" data-tgt="'+tgtSets+'" value="'+(st.rpe||'')+'" placeholder="–">';
   });
+  rows+='</div>';
+  const controls='<div class="row" style="gap:8px;margin-top:8px"><button class="addset" data-add="'+key+'" data-tgt="'+tgtSets+'">＋ add set</button>'+
+    (sets.length>1?'<button class="addset" data-del="'+key+'" style="color:var(--red);border-color:var(--line)">－ remove last</button>':'')+'</div>';
+  const e=exerciseE1RM(key), L=detectLift(item);
+  let prog='';
+  if(e){ prog='<div class="e1rm">Best set → est. 1RM <b>'+fmtKg(round2_5(e))+' kg</b>';
+    if(L){ const cur=S.oneRM[L.k]?parseFloat(S.oneRM[L.k]):0;
+      if(round2_5(e)>cur) prog+=' <button class="setas" data-setrm="'+L.k+'" data-val="'+round2_5(e)+'">Set as '+L.n+' 1RM ('+fmtKg(round2_5(e))+')</button>';
+      else prog+=' <span class="muted">'+L.n+' 1RM '+fmtKg(cur)+' kg</span>';
+    }
+    prog+='</div>';
+  }
+  const tgtLine='<div class="setrow-target">Target: '+tgtSets+' × '+(tgtReps||'—')+(pw!==''?' @ ~'+fmtKg(pw)+' kg':'')+'</div>';
+  return '<div class="logex"><div class="lx">'+annotateDesc(item)+' <button class="demobtn" data-demo="'+name.replace(/"/g,'')+'">▶ demo</button></div>'+tgtLine+rows+controls+prog+'</div>';
+}
+function wireWeekView(el){
+  el.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',ev=>{
+    S.done[ev.target.dataset.id]=ev.target.checked; if(!ev.target.checked) delete S.done[ev.target.dataset.id];
+    save(); renderWeekView(); renderWeekNav(); renderDash();
+  }));
+  el.querySelectorAll('.logbtn').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.log; openLoggers.has(id)?openLoggers.delete(id):openLoggers.add(id); renderWeekView(); }));
+  el.querySelectorAll('.setgrid input').forEach(inp=>inp.addEventListener('change',()=>{
+    const key=inp.dataset.key, idx=+inp.dataset.idx, f=inp.dataset.f, tgt=+inp.dataset.tgt||1, v=inp.value.trim();
+    if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:Array.from({length:tgt},()=>({w:'',reps:'',rpe:''}))};
+    while(S.log[key].sets.length<=idx) S.log[key].sets.push({w:'',reps:'',rpe:''});
+    if(v) S.log[key].sets[idx][f]=v; else delete S.log[key].sets[idx][f];
+    if(!S.log[key].sets.some(s=>s.w||s.reps||s.rpe)) delete S.log[key];
+    save(); renderWeekView();
+  }));
+  el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
+    const key=b.dataset.add, tgt=+b.dataset.tgt||1;
+    if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:Array.from({length:tgt},()=>({w:'',reps:'',rpe:''}))};
+    S.log[key].sets.push({w:'',reps:'',rpe:''}); save(); renderWeekView();
+  }));
+  el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
+    const key=b.dataset.del; if(S.log[key]&&S.log[key].sets){ S.log[key].sets.pop(); if(S.log[key].sets.length===0||!S.log[key].sets.some(s=>s.w||s.reps||s.rpe)) delete S.log[key]; save(); renderWeekView(); }
+  }));
+  el.querySelectorAll('[data-setrm]').forEach(b=>b.addEventListener('click',()=>{ S.oneRM[b.dataset.setrm]=b.dataset.val; save(); renderWeekView(); renderLifts(); }));
+  el.querySelectorAll('.demobtn').forEach(b=>b.addEventListener('click',()=>openDemo(b.dataset.demo)));
 }
 
 /* =================== DASHBOARD =================== */
@@ -641,7 +768,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{}},JSON.parse(r.result)); save(); renderAll(); alert('Data imported.'); }catch(e){ alert('Invalid file.'); } };
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{}},JSON.parse(r.result)); save(); renderAll(); alert('Data imported.'); }catch(e){ alert('Invalid file.'); } };
   r.readAsText(f);
 }
 
@@ -688,7 +815,7 @@ function renderPctTable(){
     }).join('')+'</tbody></table></div>';
 }
 
-function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); renderLifts(); }
+function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); renderLifts(); renderDemoLib(); }
 initBench(); renderAll();
 </script>
 <script>
