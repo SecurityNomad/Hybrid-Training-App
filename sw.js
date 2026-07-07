@@ -1,5 +1,5 @@
 /* HYROX Prep — service worker (offline app shell) */
-const CACHE = 'hyrox-prep-v4';
+const CACHE = 'hyrox-prep-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -25,45 +25,22 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Navigation / HTML requests use network-first so new deploys always reach
-// installed devices; fall back to the cached shell only when offline.
-function isHtmlRequest(req) {
-  return req.mode === 'navigate' ||
-    (req.headers.get('accept') || '').includes('text/html');
-}
-
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
-
-  if (isHtmlRequest(req)) {
-    e.respondWith(
-      fetch(req)
-        .then(res => {
-          if (res && res.ok && new URL(req.url).origin === self.location.origin) {
-            const copy = res.clone();
-            caches.open(CACHE).then(c => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match(req).then(c => c || caches.match('./index.html')))
-    );
-    return;
-  }
-
-  // Static assets: cache-first, then network (and cache the result).
   e.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;
       return fetch(req)
         .then(res => {
+          // cache same-origin successful responses for next time
           if (res && res.ok && new URL(req.url).origin === self.location.origin) {
             const copy = res.clone();
             caches.open(CACHE).then(c => c.put(req, copy));
           }
           return res;
         })
-        .catch(() => cached);
+        .catch(() => caches.match('./index.html'));
     })
   );
 });

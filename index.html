@@ -12,87 +12,49 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon-64.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=optional" rel="stylesheet">
 <style>
 :root{
   --bg:#0d0e11; --card:#16181d; --card2:#1d2026; --line:#2a2e36;
   --text:#e8eaed; --muted:#9aa0aa; --accent:#ffd60a; --accent2:#ffb800;
   --green:#3ddc84; --red:#ff5d5d; --blue:#5ab0ff;
   --radius:14px;
-
-  /* Type family */
-  --ff:'DM Sans',system-ui,-apple-system,sans-serif;
-
-  /* Type scale (fixed rem — product UI) */
-  --text-2xs:0.6875rem;
-  --text-xs:0.75rem;
-  --text-sm:0.875rem;
-  --text-base:0.9375rem;
-  --text-md:1.0625rem;
-  --text-lg:1.25rem;
-  --text-xl:1.75rem;
-  --text-2xl:2.125rem;
-
-  /* Weights */
-  --w-regular:400;
-  --w-medium:500;
-  --w-semibold:600;
-  --w-bold:700;
-  --w-extra:800;
-
-  /* Leading */
-  --lh-tight:1.1;
-  --lh-snug:1.25;
-  --lh-normal:1.5;
-  --lh-loose:1.65;
-
-  /* Easing */
-  --ease-out-quart:cubic-bezier(0.25,1,0.5,1);
-  --ease-out-expo:cubic-bezier(0.16,1,0.3,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--ff);font-size:var(--text-base);line-height:var(--lh-loose);font-optical-sizing:auto;font-kerning:normal;font-variant-numeric:tabular-nums;padding-bottom:60px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.5;padding-bottom:60px}
 header{padding:24px 20px 12px;max-width:1100px;margin:0 auto}
-header h1{font-size:var(--text-xl);font-weight:var(--w-extra);letter-spacing:-0.02em;line-height:var(--lh-tight);text-wrap:balance}
-header h1 span{color:var(--accent);display:inline-block;animation:accentIn .45s var(--ease-out-expo) .25s both}
-header .sub{color:var(--muted);font-size:var(--text-sm);margin-top:6px;line-height:var(--lh-normal)}
+header h1{font-size:26px;letter-spacing:.5px}
+header h1 span{color:var(--accent)}
+header .sub{color:var(--muted);font-size:14px;margin-top:2px}
 .wrap{max-width:1100px;margin:0 auto;padding:0 20px}
 nav{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 20px;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:5;border-bottom:1px solid var(--line)}
-nav button{background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:var(--text-sm);font-family:var(--ff);cursor:pointer;font-weight:var(--w-semibold)}
+nav button{background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13.5px;cursor:pointer;font-weight:600}
 nav button.active{background:var(--accent);color:#111;border-color:var(--accent)}
 .tab{display:none}
 .tab.active{display:block;animation:fade .25s}
-.ref-pane{display:none}
-.ref-pane.active{display:block;animation:fade .2s}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
-@keyframes modalBg{from{opacity:0}to{opacity:1}}
-@keyframes modalBox{from{opacity:0;transform:translateY(18px) scale(0.96)}to{opacity:1;transform:none}}
-@keyframes logFlash{0%,100%{background:var(--accent);color:#111}50%{background:var(--green);color:#111}}
-@keyframes errIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .grid{display:grid;gap:14px}
 .g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
-.card h3{font-size:var(--text-xs);font-weight:var(--w-medium);color:var(--muted);margin-bottom:8px;letter-spacing:0}
-.big{font-size:var(--text-2xl);font-weight:var(--w-extra);letter-spacing:-0.03em;line-height:var(--lh-tight)}
-.big small{font-size:var(--text-sm);color:var(--muted);font-weight:var(--w-medium)}
+.card h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+.big{font-size:34px;font-weight:800}
+.big small{font-size:14px;color:var(--muted);font-weight:500}
 .accent{color:var(--accent)}
 .green{color:var(--green)}
 .red{color:var(--red)}
 .muted{color:var(--muted)}
-h2.sec{font-size:var(--text-lg);font-weight:var(--w-bold);margin:28px 0 12px;letter-spacing:-0.01em;line-height:var(--lh-snug);text-wrap:balance}
+h2.sec{font-size:18px;margin:26px 0 12px;display:flex;align-items:center;gap:8px}
+h2.sec::before{content:"";width:4px;height:18px;background:var(--accent);border-radius:2px;display:inline-block}
 .bar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:8px}
-.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(0.25,0,0,1)}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
 /* week cards */
 .week{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
 .week.current{border-color:var(--accent)}
 .whead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;gap:10px;flex-wrap:wrap}
 .whead:hover{background:var(--card2)}
-.whead .wtitle{font-weight:var(--w-bold);font-size:var(--text-base)}
-.whead .wmeta{color:var(--muted);font-size:var(--text-xs)}
-.badge{font-size:var(--text-2xs);font-weight:var(--w-bold);padding:3px 10px;border-radius:99px;letter-spacing:.4px}
+.whead .wtitle{font-weight:700;font-size:15px}
+.whead .wmeta{color:var(--muted);font-size:12.5px}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:.5px}
 .b1{background:#1b3a2d;color:var(--green)}
 .b2{background:#3a2e1b;color:var(--accent)}
 .b3{background:#3a1b1b;color:var(--red)}
@@ -103,129 +65,209 @@ h2.sec{font-size:var(--text-lg);font-weight:var(--w-bold);margin:28px 0 12px;let
 .sess{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start}
 .sess:last-child{border-bottom:none}
 .sess input{margin-top:4px;width:17px;height:17px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
-.sess .day{font-weight:var(--w-extra);font-size:var(--text-xs);color:var(--accent);width:38px;flex-shrink:0;margin-top:2px;letter-spacing:.02em}
-.sess .st{font-weight:var(--w-bold);font-size:var(--text-base)}
-.sess .sd{color:var(--muted);font-size:var(--text-sm);margin-top:2px;white-space:pre-line;line-height:var(--lh-loose)}
+.sess .day{font-weight:800;font-size:12px;color:var(--accent);width:38px;flex-shrink:0;margin-top:2px}
+.sess .st{font-weight:700;font-size:14px}
+.sess .sd{color:var(--muted);font-size:13px;margin-top:2px;white-space:pre-line}
 .sess.done .st,.sess.done .sd{text-decoration:line-through;opacity:.45}
 /* benchmarks */
-table{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
-th{color:var(--muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.6px;font-weight:var(--w-medium)}
-input[type=text],input[type=date],input[type=number],select{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 12px;font-size:var(--text-base);font-family:var(--ff);outline:none;transition:border-color .15s var(--ease-out-quart)}
+th{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.8px}
+input[type=text],input[type=date],input[type=number],select{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 12px;font-size:14px;outline:none}
 input:focus,select:focus{border-color:var(--accent)}
-.btn{background:var(--accent);color:#111;border:none;border-radius:8px;padding:9px 18px;font-weight:var(--w-bold);font-size:var(--text-base);font-family:var(--ff);cursor:pointer}
+.btn{background:var(--accent);color:#111;border:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:14px;cursor:pointer}
 .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.btn.danger{background:transparent;color:var(--red);border:1px solid var(--line);padding:4px 10px;font-size:var(--text-xs)}
+.btn.danger{background:transparent;color:var(--red);border:1px solid var(--line);padding:4px 10px;font-size:12px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .chartbox{margin-top:14px}
 .chartbox svg{width:100%;height:160px}
-.trend{font-size:var(--text-xs);font-weight:var(--w-bold)}
+.trend{font-size:12px;font-weight:700}
 ul.clean{list-style:none}
-ul.clean li{padding:9px 0;border-bottom:1px solid var(--line);font-size:var(--text-base);line-height:var(--lh-loose)}
+ul.clean li{padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
 ul.clean li:last-child{border:none}
 ul.clean li b{color:var(--accent)}
 .check li{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
 .check input{width:17px;height:17px;accent-color:var(--accent);margin-top:3px;flex-shrink:0}
 .check li.done span{text-decoration:line-through;opacity:.5}
-.note{background:color-mix(in oklch,var(--accent) 7%,var(--card2));border:1px solid color-mix(in oklch,var(--accent) 22%,var(--line));padding:12px 14px;border-radius:var(--radius);font-size:var(--text-sm);color:var(--muted);margin:12px 0;line-height:var(--lh-loose)}
+.note{background:var(--card2);border-left:3px solid var(--accent);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13.5px;color:var(--muted);margin:12px 0}
 .note b{color:var(--text)}
 .station-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
-.mistake{background:color-mix(in oklch,var(--red) 6%,var(--card));border-color:color-mix(in oklch,var(--red) 28%,var(--line))}
-footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);font-size:var(--text-xs)}
-@media(max-width:600px){
-  header{padding:14px 16px 8px}
-  header h1{font-size:var(--text-md);letter-spacing:-0.01em}
-  header .sub{font-size:var(--text-xs);margin-top:4px}
-  nav{position:fixed;bottom:0;left:0;right:0;top:auto;margin:0;padding:8px 12px env(safe-area-inset-bottom,8px);border-bottom:none;border-top:1px solid var(--line);z-index:10;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;gap:4px}
-  body{padding-bottom:calc(70px + env(safe-area-inset-bottom,0px))}
-  .big{font-size:var(--text-xl)}
-  .wrap{padding:12px 14px 0}
-}
-@media(prefers-reduced-motion:reduce){.tab.active,.ref-pane.active,.modal.open,.modal.open .modalbox,.btn.log-success,.err-in,.countdown-hot,#toast.toast-in,#toast.toast-out{animation:none}header h1 span{animation:none;opacity:1}.bar i,input[type=text],input[type=date],input[type=number],select{transition:none}nav button,.subnav button,.btn{transition:none}button:not(:disabled):active{transform:none}}
-/* ---- Interaction states ---- */
-nav button,.subnav button{transition:background .12s,color .12s,border-color .12s,transform .1s}
-nav button:hover:not(.active),.subnav button:hover:not(.active){background:var(--card2);color:var(--text)}
-.btn{transition:filter .12s,background .12s,color .12s,border-color .12s,transform .1s}
-.btn:hover{filter:brightness(1.12)}
-.btn.ghost:hover{background:var(--card2);color:var(--text);border-color:var(--muted)}
-.btn.danger:hover{background:color-mix(in oklch,var(--red) 8%,transparent)}
-.logbtn:hover{background:color-mix(in oklch,var(--blue) 10%,transparent);border-color:var(--blue)}
-.logbtn.has:hover{background:color-mix(in oklch,var(--green) 10%,transparent);border-color:var(--green)}
-.addset:hover{background:color-mix(in oklch,var(--blue) 8%,transparent);border-color:var(--blue);color:var(--blue)}
-.setas:hover{background:color-mix(in oklch,var(--accent) 12%,transparent)}
-.demobtn:hover{background:var(--card2);border-color:var(--muted);color:var(--text)}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-button:not(:disabled):active{transform:scale(0.97)}
-/* ---- Motion ---- */
-.btn.log-success{animation:logFlash .55s var(--ease-out-quart)}
-.err-in{animation:errIn .18s var(--ease-out-quart) both}
-/* ---- Delight ---- */
-@keyframes accentIn{from{opacity:0;letter-spacing:0.04em}to{opacity:1;letter-spacing:-0.02em}}
-@keyframes countGlow{0%,100%{text-shadow:none}50%{text-shadow:0 0 28px color-mix(in oklch,var(--accent) 55%,transparent)}}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%)}}
-@keyframes toastOut{from{opacity:1;transform:translateX(-50%)}to{opacity:0;transform:translateX(-50%) translateY(-8px)}}
-.countdown-hot{animation:countGlow 2.4s ease-in-out infinite}
-.sess.today .day{background:var(--accent);color:#111;border-radius:5px;padding:2px 5px;margin-left:-5px;letter-spacing:0}
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#111;font-weight:var(--w-bold);font-size:var(--text-sm);padding:10px 22px;border-radius:99px;display:none;z-index:100;white-space:nowrap;pointer-events:none}
-#toast.toast-in{animation:toastIn .28s var(--ease-out-expo) both}
-#toast.toast-out{animation:toastOut .22s var(--ease-out-quart) both}
-@media(max-width:600px){#toast{bottom:calc(70px + env(safe-area-inset-bottom,8px) + 14px)}}
-/* ---- Inline token overrides ---- */
-#d-focus,#d-sim{font-size:var(--text-sm)}
-#iosHint{font-size:var(--text-xs)}
+.mistake{border-left:3px solid var(--red)}
+footer{max-width:1100px;margin:30px auto 0;padding:0 20px;color:var(--muted);font-size:12px}
+@media(max-width:600px){.big{font-size:26px}}
 /* weight hints + logging + lifts */
-.wt{color:var(--accent);font-weight:var(--w-bold);white-space:nowrap}
-.logbtn{background:transparent;color:var(--blue);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:var(--text-xs);font-family:var(--ff);font-weight:var(--w-bold);cursor:pointer;margin-top:10px}
+.wt{color:var(--accent);font-weight:700;white-space:nowrap}
+.logbtn{background:transparent;color:var(--blue);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px}
 .logbtn.has{color:var(--green);border-color:var(--green)}
 .logger{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;display:none}
 .logger.open{display:block}
 .logex{padding:9px 0;border-bottom:1px solid var(--line)}
 .logex:last-child{border-bottom:none}
-.logex .lx{font-size:var(--text-sm);font-weight:var(--w-semibold);margin-bottom:6px}
+.logex .lx{font-size:13px;font-weight:600;margin-bottom:6px}
 .logfields{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
-.logfields label{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:var(--w-medium);display:flex;flex-direction:column;gap:3px}
-.logfields input{padding:7px 9px;font-size:var(--text-base);font-family:var(--ff);width:104px}
+.logfields label{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.logfields input{padding:7px 9px;font-size:14px;width:104px}
 .logfields input.sets{width:70px}
-.tgt{font-size:var(--text-xs);color:var(--muted);padding-bottom:8px}
+.tgt{font-size:11.5px;color:var(--muted);padding-bottom:8px}
 .lift-row{display:flex;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .lift-row:last-child{border-bottom:none}
-.lift-row .ln{font-weight:var(--w-bold);font-size:var(--text-base);flex:1;min-width:140px}
+.lift-row .ln{font-weight:700;font-size:14px;flex:1;min-width:140px}
 .lift-row input{width:120px}
-.pcttable{font-size:var(--text-xs);margin-top:2px}
+.pcttable{font-size:12.5px;margin-top:2px}
 .pcttable td,.pcttable th{padding:6px 9px;white-space:nowrap}
-.pct-on{color:var(--accent);font-weight:var(--w-bold)}
+.pct-on{color:var(--accent);font-weight:700}
 /* plan sub-navigation (block -> week) */
 .subnav{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px}
 .subnav.wk{margin:2px 0 16px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;padding-bottom:4px}
-.subnav button{background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:var(--text-sm);font-family:var(--ff);font-weight:var(--w-bold);cursor:pointer;white-space:nowrap;flex:0 0 auto}
+.subnav button{background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex:0 0 auto}
 .subnav button.active{background:var(--accent);color:#111;border-color:var(--accent)}
-.subnav button .mini{font-size:var(--text-2xs);font-weight:var(--w-bold);opacity:.75;margin-left:6px;text-transform:uppercase;letter-spacing:.4px}
+.subnav button .mini{font-size:10px;font-weight:700;opacity:.75;margin-left:6px;text-transform:uppercase;letter-spacing:.4px}
 .wv-head{margin:2px 0 14px}
-.wv-head .wv-title{font-size:var(--text-xl);font-weight:var(--w-extra);letter-spacing:-0.02em;line-height:var(--lh-snug)}
-.wv-head .wv-focus{color:var(--muted);font-size:var(--text-sm);margin-top:6px;line-height:var(--lh-loose)}
+.wv-head .wv-title{font-size:18px;font-weight:800}
+.wv-head .wv-focus{color:var(--muted);font-size:13.5px;margin-top:4px}
 .wv-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 /* per-set logging */
-.setrow-target{font-size:var(--text-xs);color:var(--muted);margin:2px 0 6px}
+.setrow-target{font-size:11.5px;color:var(--muted);margin:2px 0 6px}
 .setgrid{display:grid;grid-template-columns:26px 1fr 1fr 1fr;gap:7px 8px;align-items:center}
-.setgrid .sh{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:var(--w-medium)}
-.setgrid .snum{font-weight:var(--w-extra);font-size:var(--text-xs);color:var(--accent);text-align:center}
-.setgrid input{padding:8px 7px;font-size:var(--text-base);font-family:var(--ff);width:100%}
-.addset{background:transparent;color:var(--blue);border:1px dashed var(--line);border-radius:8px;padding:6px 12px;font-size:var(--text-xs);font-family:var(--ff);font-weight:var(--w-bold);cursor:pointer}
-.e1rm{margin-top:10px;font-size:var(--text-xs);color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.setgrid .sh{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.setgrid .snum{font-weight:800;font-size:12px;color:var(--accent);text-align:center}
+.setgrid input{padding:8px 7px;font-size:14px;width:100%}
+.addset{background:transparent;color:var(--blue);border:1px dashed var(--line);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.e1rm{margin-top:10px;font-size:12.5px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .e1rm b{color:var(--green)}
-.setas{background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:7px;padding:4px 10px;font-size:var(--text-xs);font-family:var(--ff);font-weight:var(--w-bold);cursor:pointer}
-.demobtn{background:transparent;color:var(--blue);border:1px solid var(--line);border-radius:6px;padding:2px 9px;font-size:var(--text-xs);font-family:var(--ff);font-weight:var(--w-semibold);cursor:pointer;white-space:nowrap;display:inline-block}
+.setas{background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:7px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer}
+.demobtn{background:transparent;color:var(--blue);border:1px solid var(--line);border-radius:6px;padding:2px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-block}
 /* video modal */
-.modal{display:none;position:fixed;inset:0;background:oklch(0 0 0 / 0.74);z-index:50;align-items:center;justify-content:center;padding:16px}
-.modal.open{display:flex;animation:modalBg .22s both}
-.modal.open .modalbox{animation:modalBox .28s var(--ease-out-expo) both}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.74);z-index:50;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
 .modalbox{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:18px}
-.modalbox h3{font-size:var(--text-md);font-weight:var(--w-bold);margin-bottom:12px}
+.modalbox h3{font-size:15px;margin-bottom:12px}
 .vidframe{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;margin-bottom:12px}
 .vidframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .pinrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .pinrow input{flex:1;min-width:180px}
 .modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+/* session notes */
+.sessfoot{margin-top:10px}
+.notebtn{background:transparent;color:var(--blue);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.notebtn.has{color:var(--green);border-color:var(--green)}
+.notewrap{display:none;margin-top:10px}
+.notewrap.open{display:block}
+.noteta{width:100%;min-height:72px;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5;font-family:inherit;resize:vertical;outline:none}
+.noteta:focus{border-color:var(--accent)}
+.notepv{margin-top:8px;font-size:12.5px;color:var(--muted);border-left:3px solid var(--line);padding:2px 0 2px 10px;white-space:pre-line}
+
+/* ============================================================
+   DESIGN SYSTEM v2 — elevated identity (overrides the above)
+   ============================================================ */
+:root{
+  --bg:oklch(0.15 0.008 265);
+  --card:oklch(0.205 0.009 265);
+  --card2:oklch(0.25 0.010 265);
+  --elev:oklch(0.285 0.011 265);
+  --line:oklch(0.31 0.012 265);
+  --line-strong:oklch(0.40 0.014 265);
+  --text:oklch(0.95 0.004 260);
+  --muted:oklch(0.71 0.012 260);
+  --accent:oklch(0.86 0.17 96);
+  --accent2:oklch(0.80 0.16 84);
+  --accent-ink:oklch(0.24 0.04 96);
+  --green:oklch(0.80 0.15 155);
+  --red:oklch(0.68 0.19 24);
+  --blue:oklch(0.74 0.11 245);
+  --accent-tint:color-mix(in oklch, var(--accent) 12%, var(--card));
+  --accent-line:color-mix(in oklch, var(--accent) 30%, var(--line));
+  --danger-tint:color-mix(in oklch, var(--red) 13%, var(--card));
+  --danger-line:color-mix(in oklch, var(--red) 32%, var(--line));
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 26px -14px rgba(0,0,0,.65);
+}
+html{-webkit-text-size-adjust:100%}
+body{letter-spacing:-0.01em;padding-bottom:92px}
+.num,.big,.stat-val{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+
+header{padding:22px 20px 6px}
+header h1{font-size:clamp(24px,6.5vw,32px);font-weight:900;letter-spacing:-0.02em;text-transform:uppercase}
+header .sub{font-size:13px;letter-spacing:0}
+
+/* navigation */
+nav{gap:6px;border-bottom:1px solid var(--line)}
+nav button{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 15px;font-weight:650;font-size:13px}
+nav button svg{width:16px;height:16px;flex:0 0 auto;stroke-linecap:round;stroke-linejoin:round}
+nav button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* cards + headings — no eyebrow-on-every-card */
+.card{border-radius:var(--radius);box-shadow:var(--shadow)}
+.card h3{font-size:14px;font-weight:750;letter-spacing:-0.01em;text-transform:none;color:var(--text);margin-bottom:10px}
+.eyebrow{font-size:11px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.big{font-size:clamp(30px,8vw,42px);font-weight:850;letter-spacing:-0.03em}
+
+/* section headers — stripe removed */
+h2.sec{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:28px 0 12px;padding-bottom:9px;border-bottom:1px solid var(--line);display:block}
+h2.sec::before{content:none;display:none}
+
+/* callouts — tinted, no left stripe */
+.note{background:var(--accent-tint);border:1px solid var(--accent-line);border-radius:var(--radius-sm);color:var(--muted)}
+.note b{color:var(--text)}
+.mistake{background:var(--danger-tint);border:1px solid var(--danger-line)}
+.notepv{border-left:none;background:var(--card2);border-radius:var(--radius-sm);padding:8px 12px}
+
+/* progress bar → transform (not layout) */
+.bar i{transition:transform .5s cubic-bezier(.2,.8,.2,1);transform-origin:left}
+
+/* progress rings */
+.ring-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ring-c{position:relative;flex:0 0 auto}
+.ring-c svg{transform:rotate(-90deg)}
+.ring-c .track{stroke:var(--card2)}
+.ring-c .val{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1)}
+.ring-c .rc-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:850;font-variant-numeric:tabular-nums}
+.ring-c .rc-num small{font-size:10px;color:var(--muted);font-weight:650;letter-spacing:.04em}
+
+/* unified action buttons (kill arbitrary blue) */
+.btn{border-radius:var(--radius-sm)}
+.btn.ghost{color:var(--text)}
+.logbtn,.notebtn,.demobtn,.addset{color:var(--muted);border-color:var(--line)}
+.logbtn.has,.notebtn.has{color:var(--green);border-color:color-mix(in oklch,var(--green) 45%,var(--line));background:color-mix(in oklch,var(--green) 10%,transparent)}
+.demobtn:hover{color:var(--accent);border-color:var(--accent-line)}
+.setas{background:var(--accent-tint)}
+
+/* today card */
+.today{background:linear-gradient(135deg,var(--accent-tint),var(--card));border:1px solid var(--accent-line)}
+.today .t-sess{font-size:17px;font-weight:800;margin:6px 0 3px;letter-spacing:-0.01em}
+.today .t-desc{color:var(--muted);font-size:13px;white-space:pre-line}
+
+/* larger tap targets */
+input[type=text],input[type=date],input[type=number],select,.noteta{min-height:44px;border-radius:var(--radius-sm)}
+.setgrid input{min-height:44px}
+
+/* reference sub-nav */
+.refnav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.refnav button{background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.refnav button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.refsec{display:none}
+.refsec.active{display:block;animation:fade .25s}
+
+/* toast */
+.toast-wrap{position:fixed;left:0;right:0;bottom:100px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:60;pointer-events:none;padding:0 16px}
+.toast{background:var(--elev);color:var(--text);border:1px solid var(--line-strong);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:650;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;animation:toastIn .25s ease;max-width:92%}
+.toast .tdot{width:8px;height:8px;border-radius:50%;background:var(--green);flex:0 0 auto}
+.toast.err .tdot{background:var(--red)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* tablet */
+@media(min-width:601px) and (max-width:900px){.wrap,header,footer{max-width:780px}}
+
+/* mobile: bottom nav in the thumb zone */
+@media(max-width:640px){
+  nav{position:fixed;bottom:0;left:0;right:0;top:auto;margin:0;padding:8px 6px calc(8px + env(safe-area-inset-bottom));gap:2px;border-top:1px solid var(--line);border-bottom:none;background:color-mix(in oklch,var(--bg) 86%,black);backdrop-filter:blur(12px);justify-content:space-around}
+  nav button{flex:1;flex-direction:column;gap:3px;background:transparent;border:none;border-radius:12px;padding:6px 2px;font-size:10px;color:var(--muted)}
+  nav button svg{width:22px;height:22px}
+  nav button.active{background:transparent;color:var(--accent);border:none}
+  .toast-wrap{bottom:88px}
+  header{padding-top:16px}
+  h2.sec{margin-top:22px}
+}
 </style>
 </head>
 <body>
@@ -233,28 +275,29 @@ button:not(:disabled):active{transform:scale(0.97)}
   <h1>HYROX <span>RACE PREP</span></h1>
   <div class="sub">13-week build · Race day: Saturday 26 September 2026 · Goal: finish strong, first HYROX</div>
   <button id="installBtn" class="btn" style="display:none;margin-top:12px">⤓ Install app</button>
-  <div id="iosHint" style="display:none;margin-top:10px;color:var(--muted)">To install: tap <b>Share</b> → <b>Add to Home Screen</b>.</div>
+  <div id="iosHint" style="display:none;margin-top:10px;font-size:12.5px;color:var(--muted)">To install: tap <b>Share</b> → <b>Add to Home Screen</b>.</div>
 </header>
 
 <div class="wrap">
 <nav id="nav">
-  <button data-tab="dash" class="active">Dashboard</button>
-  <button data-tab="plan">Training Plan</button>
-  <button data-tab="bench">Benchmarks</button>
-  <button data-tab="lifts">Lifts &amp; 1RM</button>
-  <button data-tab="reference">Reference</button>
+  <button data-tab="dash" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 14a8.5 8.5 0 0117 0"/><path d="M12 14l3.6-2.6"/></svg><span class="nlabel">Dashboard</span></button>
+  <button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><span class="nlabel">Plan</span></button>
+  <button data-tab="bench"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4M4 20h16M8 20v-6M13 20V9M18 20v-9"/></svg><span class="nlabel">Benchmarks</span></button>
+  <button data-tab="lifts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg><span class="nlabel">Lifts</span></button>
+  <button data-tab="reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4.5A1.5 1.5 0 016.5 3H19v14.5H6.5A1.5 1.5 0 005 19z"/><path d="M5 19V4.5"/></svg><span class="nlabel">Reference</span></button>
 </nav>
 
 <!-- ============ DASHBOARD ============ -->
 <section class="tab active" id="tab-dash">
-  <div class="grid g3">
-    <div class="card"><h3>Countdown</h3><div class="big accent" id="d-count">—</div><div class="muted" id="d-racedate"></div></div>
-    <div class="card"><h3>Current Week</h3><div class="big" id="d-week">—</div><div class="muted" id="d-block"></div><button class="btn ghost" style="margin-top:10px;padding:5px 12px;font-size:var(--text-xs)" onclick="goToToday()">Go to this week →</button></div>
-    <div class="card"><h3>Plan Completion</h3><div class="big" id="d-pct">0<small>%</small></div><div class="bar"><i id="d-bar"></i></div></div>
+  <div class="card today" id="d-today"></div>
+  <div class="grid g3" style="margin-top:14px">
+    <div class="card"><div class="eyebrow">Countdown</div><div class="big accent" id="d-count">—</div><div class="muted" id="d-racedate"></div></div>
+    <div class="card"><div class="eyebrow">Current Week</div><div class="big" id="d-week">—</div><div class="muted" id="d-block"></div></div>
+    <div class="card"><div class="eyebrow">Plan Completion</div><div id="d-complete" style="margin-top:6px"></div></div>
   </div>
   <div class="grid g2" style="margin-top:14px">
-    <div class="card"><h3>This Week's Focus</h3><div id="d-focus"></div></div>
-    <div class="card"><h3>Next Race Simulation</h3><div id="d-sim"></div></div>
+    <div class="card"><h3>This Week's Focus</h3><div id="d-focus" style="font-size:14.5px"></div></div>
+    <div class="card"><h3>Next Race Simulation</h3><div id="d-sim" style="font-size:14.5px"></div></div>
   </div>
   <h2 class="sec">Block Progress</h2>
   <div class="grid g3" id="d-blocks"></div>
@@ -265,7 +308,7 @@ button:not(:disabled):active{transform:scale(0.97)}
 
 <!-- ============ PLAN ============ -->
 <section class="tab" id="tab-plan">
-  <div class="note"><b>How to use:</b> pick a <b>block</b>, then a <b>week</b> — you'll see just that week's sessions. Tick each session as you finish it. On strength days tap <b>Log working sets</b> to record weight, reps &amp; RPE per set; your best set gives an estimated 1RM you can push to the Lifts tab. Tap <b>▶ demo</b> on any exercise for form videos. Core days: Mon, Tue, Wed, Fri (+ optional Sun Zone-2); Friday can slide to Saturday.</div>
+  <div class="note"><b>How to use:</b> pick a <b>block</b>, then a <b>week</b>, and you'll see just that week's sessions. Tick each one as you finish it. On strength days tap <b>Log working sets</b> to record weight, reps and RPE per set; your best set gives an estimated 1RM you can push to the Lifts tab. Tap <b>▶ demo</b> on any exercise for form videos. Core days are Mon, Tue, Wed, Fri plus an optional Sun Zone-2, and Friday can slide to Saturday.</div>
   <div id="block-nav" class="subnav"></div>
   <div id="week-nav" class="subnav wk"></div>
   <div id="week-view"></div>
@@ -279,10 +322,9 @@ button:not(:disabled):active{transform:scale(0.97)}
       <select id="b-metric"></select>
       <input type="date" id="b-date">
       <input type="text" id="b-value" placeholder="value" style="width:120px">
-      <button class="btn" id="bench-log-btn" onclick="addBench()">Log</button>
+      <button class="btn" onclick="addBench()">Log</button>
     </div>
     <div class="muted" id="b-hint" style="font-size:12.5px;margin-top:8px"></div>
-    <div class="red" id="b-error" style="font-size:var(--text-xs);margin-top:6px;display:none"></div>
   </div>
   <div id="b-cards" style="margin-top:14px"></div>
   <div class="row" style="margin-top:18px">
@@ -290,7 +332,6 @@ button:not(:disabled):active{transform:scale(0.97)}
     <button class="btn ghost" onclick="document.getElementById('importfile').click()">Import data</button>
     <input type="file" id="importfile" accept=".json" style="display:none" onchange="importData(event)">
   </div>
-  <div id="import-status" style="font-size:var(--text-xs);margin-top:8px"></div>
 </section>
 
 <!-- ============ LIFTS / 1RM ============ -->
@@ -308,81 +349,77 @@ button:not(:disabled):active{transform:scale(0.97)}
   <div id="demo-lib"></div></div>
 </section>
 
-<!-- ============ REFERENCE ============ -->
+<!-- ============ REFERENCE (Strategy · Recovery · Race Week · Mistakes) ============ -->
 <section class="tab" id="tab-reference">
-  <div class="subnav" id="ref-nav">
+  <div class="refnav" id="refnav">
     <button data-ref="strategy" class="active">Race Strategy</button>
     <button data-ref="recovery">Recovery</button>
     <button data-ref="raceweek">Race Week</button>
     <button data-ref="mistakes">Mistakes</button>
   </div>
-
-  <div class="ref-pane active" id="ref-strategy">
-    <h2 class="sec">Pacing the 8 × 1km runs</h2>
-    <div class="card">
-      <ul class="clean">
-        <li><b>Anchor pace:</b> your between-station pace should be 15–25 s/km <i>slower</i> than your fresh standalone 5k pace. As a first-timer, err conservative — you can always speed up after Run 6.</li>
-        <li><b>Run 1 is a lie.</b> Adrenaline + fresh legs make it feel easy. Run it as your <i>slowest</i> planned run. Going out 20s/km too fast here costs minutes at wall balls.</li>
-        <li><b>First 200m rule:</b> the first 200m out of every station is for resetting — shake out arms, lower heart rate, settle breathing. Build to pace, don't sprint out of the roxzone.</li>
-        <li><b>Even-split target:</b> aim for runs 2–7 within a 10-second band of each other. Run 8 is free — empty the tank into wall balls.</li>
-        <li><b>After heavy-leg stations</b> (sled push, sled pull, lunges): expect the first 400m to feel terrible. Shorten stride, raise cadence, it passes.</li>
-        <li><b>Walking is a tool, not a failure:</b> 10 brisk walking steps with purpose beats a shuffle-jog spiral. Use it deliberately after sleds if needed.</li>
-      </ul>
-    </div>
-    <h2 class="sec">Station game plan (Open division)</h2>
-    <div class="station-grid" id="stations"></div>
-    <h2 class="sec">Division loads reference</h2>
-    <div class="card"><table>
-      <thead><tr><th>Station</th><th>Open Men</th><th>Open Women</th></tr></thead>
-      <tbody>
-        <tr><td>Sled Push (50m)</td><td>152 kg total</td><td>102 kg total</td></tr>
-        <tr><td>Sled Pull (50m)</td><td>103 kg total</td><td>78 kg total</td></tr>
-        <tr><td>Farmers Carry (200m)</td><td>2 × 24 kg</td><td>2 × 16 kg</td></tr>
-        <tr><td>Sandbag Lunges (100m)</td><td>20 kg</td><td>10 kg</td></tr>
-        <tr><td>Wall Balls (100 reps)</td><td>6 kg / 3.05m target</td><td>4 kg / 2.7m target</td></tr>
-      </tbody>
-    </table><div class="muted" style="font-size:12px;margin-top:8px">Verify current season weights on hyrox.com — loads occasionally change between seasons.</div></div>
+  <div class="refsec active" id="ref-strategy">
+  <h2 class="sec">Pacing the 8 × 1km runs</h2>
+  <div class="card">
+    <ul class="clean">
+      <li><b>Anchor pace:</b> your between-station pace should be 15–25 s/km <i>slower</i> than your fresh standalone 5k pace. As a first-timer, err conservative — you can always speed up after Run 6.</li>
+      <li><b>Run 1 is a lie.</b> Adrenaline + fresh legs make it feel easy. Run it as your <i>slowest</i> planned run. Going out 20s/km too fast here costs minutes at wall balls.</li>
+      <li><b>First 200m rule:</b> the first 200m out of every station is for resetting — shake out arms, lower heart rate, settle breathing. Build to pace, don't sprint out of the roxzone.</li>
+      <li><b>Even-split target:</b> aim for runs 2–7 within a 10-second band of each other. Run 8 is free — empty the tank into wall balls.</li>
+      <li><b>After heavy-leg stations</b> (sled push, sled pull, lunges): expect the first 400m to feel terrible. Shorten stride, raise cadence, it passes.</li>
+      <li><b>Walking is a tool, not a failure:</b> 10 brisk walking steps with purpose beats a shuffle-jog spiral. Use it deliberately after sleds if needed.</li>
+    </ul>
   </div>
-
-  <div class="ref-pane" id="ref-recovery">
-    <h2 class="sec">Weekly recovery protocol</h2>
-    <div class="card"><ul class="clean">
-      <li><b>Sleep:</b> 7.5–9h. This is 80% of your recovery. Non-negotiable in Block 2–3 when volume peaks.</li>
-      <li><b>Protein:</b> 1.6–2.2 g/kg bodyweight daily. With 9 years of training you know this — don't let it slip when running volume climbs.</li>
-      <li><b>Post-session (within 60 min):</b> 30–40g protein + 60–100g carbs after hybrid/sim days. Strength days: normal meals are fine.</li>
-      <li><b>Easy day discipline:</b> Zone 2 means conversational. If you can't talk in full sentences, you're stealing from tomorrow's session.</li>
-      <li><b>Weekly minimums:</b> 1 full rest day, 10 min daily mobility (hips, ankles, thoracic — your overhead weakness lives in the T-spine), 1 longer mobility session (20–30 min) on Sunday.</li>
-      <li><b>Soft tissue:</b> calves and quads twice weekly (foam roll/massage gun) once running passes 20 km/week — this is where new HYROX runners break.</li>
-      <li><b>Monitor:</b> resting HR each morning. 5+ bpm above baseline for 2 days = swap the next hard session for Zone 2.</li>
-    </ul></div>
-    <h2 class="sec">Deload weeks (W5 and W10)</h2>
-    <div class="card"><ul class="clean">
-      <li><b>Volume:</b> cut total volume ~40–50%. Keep some intensity (a few heavy-ish singles/doubles feel-good sets) so you don't go flat.</li>
-      <li><b>Running:</b> all easy. No intervals. Strides only.</li>
-      <li><b>Purpose:</b> deloads are where adaptation happens. Athletes who skip W5/W10 deloads show up to Block 3 cooked. Trust the plan.</li>
-      <li><b>Feel great by Thursday?</b> Good. That's the point. Still don't add work.</li>
-    </ul></div>
-    <div class="note"><b>Taper (W12–13):</b> volume drops ~50% in W12 and ~70% in W13, intensity stays sharp and short. Expect to feel flat early in the taper and springy by race Saturday — that's normal supercompensation. Resist the panic-training urge.</div>
+  <h2 class="sec">Station game plan (Open division)</h2>
+  <div class="station-grid" id="stations"></div>
+  <h2 class="sec">Division loads reference</h2>
+  <div class="card"><table>
+    <thead><tr><th>Station</th><th>Open Men</th><th>Open Women</th></tr></thead>
+    <tbody>
+      <tr><td>Sled Push (50m)</td><td>152 kg total</td><td>102 kg total</td></tr>
+      <tr><td>Sled Pull (50m)</td><td>103 kg total</td><td>78 kg total</td></tr>
+      <tr><td>Farmers Carry (200m)</td><td>2 × 24 kg</td><td>2 × 16 kg</td></tr>
+      <tr><td>Sandbag Lunges (100m)</td><td>20 kg</td><td>10 kg</td></tr>
+      <tr><td>Wall Balls (100 reps)</td><td>6 kg / 3.05m target</td><td>4 kg / 2.7m target</td></tr>
+    </tbody>
+  </table><div class="muted" style="font-size:12px;margin-top:8px">Verify current season weights on hyrox.com; loads occasionally change between seasons.</div></div>
   </div>
-
-  <div class="ref-pane" id="ref-raceweek">
-    <h2 class="sec">Race-week checklist</h2>
-    <div class="card"><ul class="clean check" id="checklist"></ul>
-    <div style="margin-top:10px"><button class="btn ghost" onclick="resetChecklist()">Reset checklist</button></div></div>
-    <h2 class="sec">Fueling plan</h2>
-    <div class="card"><ul class="clean">
-      <li><b>Thu–Fri (carb load):</b> 6–8 g carbs/kg bodyweight per day. Familiar foods only — rice, pasta, potatoes, bread, fruit. Reduce fibre and fat slightly on Friday.</li>
-      <li><b>Race morning (race is Saturday):</b> breakfast 2.5–3h before start — ~100–150g carbs, low fibre, low fat (e.g. oats + banana + honey, white toast + jam). Sip 500ml water with electrolytes.</li>
-      <li><b>60–90 min out:</b> small top-up if hungry — banana or half an energy bar. Nothing new, ever.</li>
-      <li><b>15 min before start:</b> optional gel or sports drink sip + caffeine if you use it (3 mg/kg, only if practiced in sims).</li>
-      <li><b>During (60–90 min race):</b> 1 gel around the rower (station 6) if the race is going past ~75 min for you. Water at stations only if genuinely thirsty — small sips.</li>
-      <li><b>Practice all of this at SIM #4 (Week 11).</b> Race day is a dress rehearsal repeat, not an experiment.</li>
-    </ul></div>
+  <div class="refsec" id="ref-recovery">
+  <h2 class="sec">Weekly recovery protocol</h2>
+  <div class="card"><ul class="clean">
+    <li><b>Sleep:</b> 7.5–9h. This is 80% of your recovery. Non-negotiable in Block 2–3 when volume peaks.</li>
+    <li><b>Protein:</b> 1.6–2.2 g/kg bodyweight daily. With 9 years of training you know this — don't let it slip when running volume climbs.</li>
+    <li><b>Post-session (within 60 min):</b> 30–40g protein + 60–100g carbs after hybrid/sim days. Strength days: normal meals are fine.</li>
+    <li><b>Easy day discipline:</b> Zone 2 means conversational. If you can't talk in full sentences, you're stealing from tomorrow's session.</li>
+    <li><b>Weekly minimums:</b> 1 full rest day, 10 min daily mobility (hips, ankles, thoracic — your overhead weakness lives in the T-spine), 1 longer mobility session (20–30 min) on Sunday.</li>
+    <li><b>Soft tissue:</b> calves and quads twice weekly (foam roll/massage gun) once running passes 20 km/week — this is where new HYROX runners break.</li>
+    <li><b>Monitor:</b> resting HR each morning. 5+ bpm above baseline for 2 days = swap the next hard session for Zone 2.</li>
+  </ul></div>
+  <h2 class="sec">Deload weeks (W5 and W10)</h2>
+  <div class="card"><ul class="clean">
+    <li><b>Volume:</b> cut total volume ~40–50%. Keep some intensity (a few heavy-ish singles/doubles feel-good sets) so you don't go flat.</li>
+    <li><b>Running:</b> all easy. No intervals. Strides only.</li>
+    <li><b>Purpose:</b> deloads are where adaptation happens. Athletes who skip W5/W10 deloads show up to Block 3 cooked. Trust the plan.</li>
+    <li><b>Feel great by Thursday?</b> Good. That's the point. Still don't add work.</li>
+  </ul></div>
+  <div class="note"><b>Taper (W12–13):</b> volume drops ~50% in W12 and ~70% in W13, intensity stays sharp and short. Expect to feel flat early in the taper and springy by race Saturday; that's normal supercompensation. Resist the panic-training urge.</div>
   </div>
-
-  <div class="ref-pane" id="ref-mistakes">
-    <h2 class="sec">Common mistakes at your level</h2>
-    <div id="mistakes-list" class="grid" style="grid-template-columns:1fr"></div>
+  <div class="refsec" id="ref-raceweek">
+  <h2 class="sec">Race-week checklist</h2>
+  <div class="card"><ul class="clean check" id="checklist"></ul>
+  <div style="margin-top:10px"><button class="btn ghost" onclick="resetChecklist()">Reset checklist</button></div></div>
+  <h2 class="sec">Fueling plan</h2>
+  <div class="card"><ul class="clean">
+    <li><b>Thu–Fri (carb load):</b> 6–8 g carbs/kg bodyweight per day. Familiar foods only — rice, pasta, potatoes, bread, fruit. Reduce fibre and fat slightly on Friday.</li>
+    <li><b>Race morning (race is Saturday):</b> breakfast 2.5–3h before start — ~100–150g carbs, low fibre, low fat (e.g. oats + banana + honey, white toast + jam). Sip 500ml water with electrolytes.</li>
+    <li><b>60–90 min out:</b> small top-up if hungry — banana or half an energy bar. Nothing new, ever.</li>
+    <li><b>15 min before start:</b> optional gel or sports drink sip + caffeine if you use it (3 mg/kg, only if practiced in sims).</li>
+    <li><b>During (60–90 min race):</b> 1 gel around the rower (station 6) if the race is going past ~75 min for you. Water at stations only if genuinely thirsty — small sips.</li>
+    <li><b>Practice all of this at SIM #4 (Week 11).</b> Race day is a dress rehearsal repeat, not an experiment.</li>
+  </ul></div>
+</div>
+  <div class="refsec" id="ref-mistakes">
+  <h2 class="sec">Common mistakes at your level</h2>
+  <div id="mistakes-list" class="grid" style="grid-template-columns:1fr"></div>
   </div>
 </section>
 </div>
@@ -392,13 +429,13 @@ button:not(:disabled):active{transform:scale(0.97)}
     <h3 id="vidTitle">Form demo</h3>
     <div id="vidBody"></div>
     <div class="pinrow"><input type="text" id="vidUrl" placeholder="Paste a YouTube link to pin…"><button class="btn" onclick="pinDemo()">Pin</button></div>
-    <div class="red" id="vid-error" style="font-size:var(--text-xs);margin-top:6px;display:none"></div>
     <div class="modal-actions"><button class="btn ghost" id="vidRemove" style="display:none" onclick="unpinDemo()">Remove pinned</button><button class="btn ghost" onclick="closeDemo()">Close</button></div>
   </div>
 </div>
 
-<footer>Built for Raha · 13-week HYROX prep · Data stays in this browser — use Export to back up.</footer>
-<div id="toast"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<footer>HYROX Prep · Built for Raha · 13-week build · Your data is saved on this device. Use Export in Benchmarks to back it up.</footer>
 
 <script>
 /* =================== DATA =================== */
@@ -540,7 +577,7 @@ const METRICS = [
 ];
 
 /* =================== STATE =================== */
-let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}};
+let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -586,38 +623,40 @@ function metricVal(m, raw){ return m.type==='time' ? fmtTime(raw) : raw + (m.uni
 
 /* =================== TABS =================== */
 document.getElementById('nav').addEventListener('click', e=>{
-  if(e.target.tagName!=='BUTTON') return;
+  const btn=e.target.closest('button'); if(!btn) return;
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  e.target.classList.add('active');
-  document.getElementById('tab-'+e.target.dataset.tab).classList.add('active');
+  btn.classList.add('active');
+  const tab=document.getElementById('tab-'+btn.dataset.tab); if(tab) tab.classList.add('active');
+  window.scrollTo(0,0);
 });
-
-/* =================== REFERENCE SUB-NAV =================== */
-document.getElementById('ref-nav').addEventListener('click', e=>{
-  if(e.target.tagName!=='BUTTON') return;
-  document.querySelectorAll('#ref-nav button').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.ref-pane').forEach(p=>p.classList.remove('active'));
-  e.target.classList.add('active');
-  document.getElementById('ref-'+e.target.dataset.ref).classList.add('active');
+/* reference sub-navigation */
+document.addEventListener('click', e=>{
+  const rb=e.target.closest('#refnav button'); if(!rb) return;
+  document.querySelectorAll('#refnav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.refsec').forEach(s=>s.classList.remove('active'));
+  rb.classList.add('active');
+  const sec=document.getElementById('ref-'+rb.dataset.ref); if(sec) sec.classList.add('active');
 });
-
-/* =================== JUMP TO TODAY =================== */
-function goToToday(){
-  const cw=currentWeek();
-  if(cw>=1&&cw<=13){const wk=WEEKS.find(w=>w.w===cw);if(wk) planView={block:wk.block,week:cw};}
-  document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelector('#nav button[data-tab="plan"]').classList.add('active');
-  document.getElementById('tab-plan').classList.add('active');
-  renderPlan();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
 
 /* =============== PROGRESSION + VIDEO HELPERS =============== */
 let planView = null;          // {block, week}
 let openLoggers = new Set();  // session ids with logger expanded
+let openNotes = new Set();    // session ids with notes expanded
 let demoMove = '';            // movement currently in the video modal
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toast(msg,type){ let w=document.getElementById('toastWrap'); if(!w){ w=document.createElement('div'); w.id='toastWrap'; w.className='toast-wrap'; document.body.appendChild(w); } const t=document.createElement('div'); t.className='toast'+(type==='err'?' err':''); t.innerHTML='<span class="tdot"></span>'+msg; w.appendChild(t); setTimeout(()=>{ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(()=>t.remove(),300); },1900); }
+let _lastSaveToast=0;
+function savedFlash(){ const n=Date.now(); if(n-_lastSaveToast>2500){ _lastSaveToast=n; toast('Saved ✓'); } }
+function ringSVG(pct,size,centerHTML){ size=size||100; const sw=Math.max(6,Math.round(size*0.10)); const r=(size-sw)/2; const c=2*Math.PI*r; const off=c*(1-Math.max(0,Math.min(100,pct))/100); return '<div class="ring-c" style="width:'+size+'px;height:'+size+'px"><svg viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'"><circle class="track" cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke-width="'+sw+'"/><circle class="val" cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke-width="'+sw+'" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg><div class="rc-num" style="font-size:'+Math.round(size*0.24)+'px">'+centerHTML+'</div></div>'; }
+function todaySession(){ const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()]; const cw=currentWeek(); if(cw<1||cw>13) return {wk:null,s:null,wd:wd}; const wk=WEEKS.find(w=>w.w===cw); const s=wk?wk.sess.find(x=>x.d===wd):null; return {wk:wk,s:s,wd:wd}; }
+function jumpToToday(){ const cw=currentWeek(); if(cw>=1&&cw<=13){ const wk=WEEKS.find(w=>w.w===cw); planView={block:wk.block,week:cw}; const ts=todaySession(); if(ts.wk&&ts.s){ openLoggers.add('w'+ts.wk.w+'s'+ts.wk.sess.indexOf(ts.s)); } }
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const nb=document.querySelector('nav button[data-tab="plan"]'); if(nb) nb.classList.add('active');
+  document.getElementById('tab-plan').classList.add('active');
+  renderPlan(); window.scrollTo(0,0);
+}
 const DEMO_LIB = ['SkiErg','Sled Push','Sled Pull','Burpee Broad Jump','Rowing','Farmers Carry','Sandbag Lunges','Wall Balls','Back Squat','Deadlift','Romanian Deadlift','Bench Press','Push Press','Overhead Press','Pull-up','Hip Thrust','Kettlebell Swing'];
 
 function epley(w,reps){ return w*(1+reps/30); }
@@ -654,9 +693,8 @@ function closeDemo(){ document.getElementById('vidModal').classList.remove('open
 function pinDemo(){
   const url=document.getElementById('vidUrl').value.trim(), key=movementKey(demoMove);
   if(!url){ delete S.videos[key]; save(); openDemo(demoMove); return; }
-  if(!ytEmbed(url)){showErr(document.getElementById('vid-error'),'Paste a full YouTube link — youtube.com/watch?v=… or youtu.be/…'); return;}
-  document.getElementById('vid-error').style.display='none';
-  S.videos[key]=url; save(); openDemo(demoMove); renderWeekView();
+  if(!ytEmbed(url)){ toast('Paste a valid YouTube link','err'); return; }
+  S.videos[key]=url; save(); openDemo(demoMove); renderWeekView(); toast('Demo pinned ✓');
 }
 function unpinDemo(){ const key=movementKey(demoMove); delete S.videos[key]; save(); openDemo(demoMove); renderWeekView(); }
 function renderDemoLib(){ const el=document.getElementById('demo-lib'); if(!el) return;
@@ -702,15 +740,17 @@ function renderWeekView(){
 }
 function renderSession(wk,s,i){
   const id='w'+wk.w+'s'+i, done=S.done[id]?' done':'';
-  const todayDay=['SUN','MON','TUE','WED','THU','FRI','SAT'][new Date().getDay()];
-  const isToday=!S.done[id]&&wk.w===currentWeek()&&s.d&&s.d.toUpperCase()===todayDay;
   const isLift=/Strength|Stations|Openers|Primer/.test(s.t);
   const items=isLift?loggableItems(s.x):[];
   const anyLog=items.some((it,j)=>logHasData(id+'x'+j));
   const logBtn=items.length?'<button class="logbtn'+(anyLog?' has':'')+'" data-log="'+id+'">'+(anyLog?'✓ ':'')+'Log working sets</button>':'';
   const logger=items.length?'<div class="logger'+(openLoggers.has(id)?' open':'')+'">'+items.map((it,j)=>renderExercise(id,it,j)).join('')+'</div>':'';
-  return '<div class="sess'+done+(isToday?' today':'')+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
-    '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+logger+'</div></div>';
+  const hasNote=!!(S.notes[id]&&S.notes[id].trim()), nOpen=openNotes.has(id);
+  const noteBtn='<button class="notebtn'+(hasNote?' has':'')+'" data-note="'+id+'">'+(hasNote?'📝 Notes ✓':'＋ Notes')+'</button>';
+  const notePv=(hasNote&&!nOpen)?'<div class="notepv">'+escapeHtml(S.notes[id])+'</div>':'';
+  const noteWrap='<div class="notewrap'+(nOpen?' open':'')+'"><textarea class="noteta" data-noteid="'+id+'" placeholder="How did it go? e.g. 4 of 5 × 600m done, legs heavy — hold pace and add the 5th next time.">'+escapeHtml(S.notes[id]||'')+'</textarea></div>';
+  return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
+    '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+logger+'<div class="sessfoot">'+noteBtn+'</div>'+notePv+noteWrap+'</div></div>';
 }
 function renderExercise(id,item,j){
   const key=id+'x'+j;
@@ -741,12 +781,7 @@ function renderExercise(id,item,j){
 function wireWeekView(el){
   el.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',ev=>{
     S.done[ev.target.dataset.id]=ev.target.checked; if(!ev.target.checked) delete S.done[ev.target.dataset.id];
-    save();
-    if(ev.target.checked){
-      const wk=WEEKS.find(w=>w.w===planView.week);
-      if(wk&&wk.sess.every((_,i)=>S.done['w'+wk.w+'s'+i])) showToast('Week '+wk.w+' complete 💛');
-    }
-    renderWeekView(); renderWeekNav(); renderDash();
+    save(); renderWeekView(); renderWeekNav(); renderDash();
   }));
   el.querySelectorAll('.logbtn').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.log; openLoggers.has(id)?openLoggers.delete(id):openLoggers.add(id); renderWeekView(); }));
   el.querySelectorAll('.setgrid input').forEach(inp=>inp.addEventListener('change',()=>{
@@ -755,7 +790,7 @@ function wireWeekView(el){
     while(S.log[key].sets.length<=idx) S.log[key].sets.push({w:'',reps:'',rpe:''});
     if(v) S.log[key].sets[idx][f]=v; else delete S.log[key].sets[idx][f];
     if(!S.log[key].sets.some(s=>s.w||s.reps||s.rpe)) delete S.log[key];
-    save(); renderWeekView();
+    save(); savedFlash(); renderWeekView();
   }));
   el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
     const key=b.dataset.add, tgt=+b.dataset.tgt||1;
@@ -765,61 +800,54 @@ function wireWeekView(el){
   el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
     const key=b.dataset.del; if(S.log[key]&&S.log[key].sets){ S.log[key].sets.pop(); if(S.log[key].sets.length===0||!S.log[key].sets.some(s=>s.w||s.reps||s.rpe)) delete S.log[key]; save(); renderWeekView(); }
   }));
-  el.querySelectorAll('[data-setrm]').forEach(b=>b.addEventListener('click',()=>{ S.oneRM[b.dataset.setrm]=b.dataset.val; save(); renderWeekView(); renderLifts(); }));
+  el.querySelectorAll('[data-setrm]').forEach(b=>b.addEventListener('click',()=>{ S.oneRM[b.dataset.setrm]=b.dataset.val; save(); renderWeekView(); renderLifts(); toast(((LIFTS.find(l=>l.k===b.dataset.setrm)||{}).n||'Lift')+' 1RM updated ✓'); }));
   el.querySelectorAll('.demobtn').forEach(b=>b.addEventListener('click',()=>openDemo(b.dataset.demo)));
-}
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.style.display='block';
-  t.classList.remove('toast-in','toast-out'); void t.offsetWidth; t.classList.add('toast-in');
-  clearTimeout(t._tid);
-  t._tid=setTimeout(()=>{
-    t.classList.remove('toast-in'); t.classList.add('toast-out');
-    setTimeout(()=>{t.style.display='none';t.classList.remove('toast-out');},260);
-  },2400);
+  el.querySelectorAll('.notebtn').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.note; openNotes.has(id)?openNotes.delete(id):openNotes.add(id); renderWeekView(); }));
+  el.querySelectorAll('.noteta').forEach(ta=>ta.addEventListener('input',()=>{
+    const id=ta.dataset.noteid, v=ta.value;
+    if(v.trim()) S.notes[id]=v; else delete S.notes[id];
+    save();
+    const btn=el.querySelector('.notebtn[data-note="'+id+'"]');
+    if(btn){ const has=!!(S.notes[id]&&S.notes[id].trim()); btn.classList.toggle('has',has); btn.textContent=has?'📝 Notes ✓':'＋ Notes'; }
+  }));
 }
 
 /* =================== DASHBOARD =================== */
 function renderDash(){
   const now=new Date(); now.setHours(0,0,0,0);
   const days=Math.round((RACE_DATE-now)/864e5);
-  const countEl=document.getElementById('d-count');
-  let countHtml;
-  if(days<0) countHtml='DONE! 🏁';
-  else if(days===0) countHtml='GO TIME 🏁';
-  else if(days===1) countHtml='1<small> day — tomorrow!</small>';
-  else if(days<=7) countHtml=days+'<small> days — race week! 🔥</small>';
-  else countHtml=days+'<small> days to go</small>';
-  countEl.innerHTML=countHtml;
-  countEl.classList.toggle('countdown-hot',days>=0&&days<=7);
+  document.getElementById('d-count').innerHTML = days>0 ? days+'<small> days to go</small>' : (days===0?'RACE DAY 🏁':'DONE 🏁');
   document.getElementById('d-racedate').textContent='Sat 26 Sep 2026';
   const cw=currentWeek();
   const wk=WEEKS.find(w=>w.w===cw);
   document.getElementById('d-week').innerHTML = cw===0?'Pre-plan<small></small>': cw>13?'Race!<small></small>':cw+'<small> of 13</small>';
-  document.getElementById('d-block').textContent = wk? 'Block '+wk.block+' — '+BLOCKS[wk.block-1].name : (cw===0?'Plan starts Mon 29 Jun':'');
+  document.getElementById('d-block').textContent = wk? 'Block '+wk.block+' · '+BLOCKS[wk.block-1].name : (cw===0?'Plan starts Mon 29 Jun':'');
   document.getElementById('d-focus').textContent = wk? wk.focus : (cw===0? 'Plan starts Monday 29 June. Use Week 1 for baseline tests: 5km TT, 1000m row, 100 wall balls.' : 'Recover, celebrate, and book the next one.');
+  // today card
+  const ts=todaySession(), tdEl=document.getElementById('d-today');
+  if(ts.wk && ts.s){ const sid='w'+ts.wk.w+'s'+ts.wk.sess.indexOf(ts.s), isDone=!!S.done[sid];
+    tdEl.innerHTML='<div class="eyebrow">Today · '+ts.wd+' · Week '+ts.wk.w+'</div><div class="t-sess">'+ts.s.t+' — '+ts.s.n+(isDone?' <span class="green">✓</span>':'')+'</div><div class="t-desc">'+annotateDesc(ts.s.x)+'</div><button class="btn" style="margin-top:14px" onclick="jumpToToday()">Open &amp; log →</button>';
+  } else if(ts.wk){
+    tdEl.innerHTML='<div class="eyebrow">Today · '+ts.wd+'</div><div class="t-sess">Rest day</div><div class="t-desc">No session scheduled. Recover, hydrate, mobilise.</div><button class="btn ghost" style="margin-top:14px" onclick="jumpToToday()">Open this week →</button>';
+  } else {
+    tdEl.innerHTML='<div class="eyebrow">Today</div><div class="t-sess">'+(cw<1?'Plan starts Mon 29 Jun':'Plan complete 🏁')+'</div><div class="t-desc">'+(cw<1?'Week 1 is baseline-test week.':'Great work. Time to race.')+'</div>';
+  }
   // next sim
   const nextSim = WEEKS.find(w=>w.sim && w.w>=cw);
   document.getElementById('d-sim').innerHTML = nextSim ?
-    '<b class="accent">Week '+nextSim.w+' ('+weekDates(nextSim.w)+')</b><br>'+nextSim.sim+' — '+nextSim.sess.find(s=>s.t==='RACE SIM').n :
-    'All sims complete — race day is next!';
-  // completion
+    '<b class="accent">Week '+nextSim.w+' ('+weekDates(nextSim.w)+')</b><br>'+nextSim.sim+' · '+nextSim.sess.find(s=>s.t==='RACE SIM').n :
+    'All sims complete. Race day is next!';
+  // completion ring
   let total=0, done=0;
   WEEKS.forEach(w=>w.sess.forEach((s,i)=>{ total++; if(S.done['w'+w.w+'s'+i]) done++; }));
   const pct=total?Math.round(done/total*100):0;
-  document.getElementById('d-pct').innerHTML=pct+'<small>%</small>';
-  const dBar=document.getElementById('d-bar');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{ dBar.style.transform='scaleX('+(pct/100)+')'; }));
-  // blocks
+  document.getElementById('d-complete').innerHTML='<div class="ring-wrap">'+ringSVG(pct,96,pct+'<small>%</small>')+'<div class="muted" style="font-size:13px">'+done+' of '+total+'<br>sessions done</div></div>';
+  // block rings
   document.getElementById('d-blocks').innerHTML = BLOCKS.map(b=>{
     let t=0,d=0; WEEKS.filter(w=>w.block===b.n).forEach(w=>w.sess.forEach((s,i)=>{t++; if(S.done['w'+w.w+'s'+i])d++;}));
     const p=t?Math.round(d/t*100):0;
-    return '<div class="card"><h3>Block '+b.n+' · W'+b.weeks[0]+'–'+b.weeks[1]+'</h3><div style="font-weight:700;margin-bottom:4px">'+b.name+'</div>'+
-      '<div class="muted" style="font-size:12.5px">'+b.desc+'</div><div class="bar"><i data-pct="'+(p/100)+'"></i></div><div class="muted" style="font-size:12px;margin-top:4px">'+p+'% complete</div></div>';
+    return '<div class="card"><div class="ring-wrap" style="gap:14px"><div style="flex:0 0 auto">'+ringSVG(p,72,p+'<small>%</small>')+'</div><div style="min-width:0"><div class="eyebrow">Block '+b.n+' · W'+b.weeks[0]+'–'+b.weeks[1]+'</div><div style="font-weight:750;margin:3px 0">'+b.name+'</div><div class="muted" style="font-size:12.5px">'+b.desc+'</div></div></div></div>';
   }).join('');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    document.querySelectorAll('#d-blocks .bar i[data-pct]').forEach(b=>{ b.style.transform='scaleX('+b.dataset.pct+')'; });
-  }));
   // bench summary
   const tb=document.querySelector('#d-benchtable tbody');
   tb.innerHTML = METRICS.map(m=>{
@@ -843,31 +871,26 @@ function initBench(){
   sel.innerHTML=METRICS.map(m=>'<option value="'+m.k+'">'+m.n+'</option>').join('');
   sel.addEventListener('change',updateHint);
   document.getElementById('b-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('b-value').addEventListener('input',()=>{const e=document.getElementById('b-error');e.style.display='none';e.classList.remove('err-in');});
   updateHint();
 }
-function showErr(el,msg){el.textContent=msg;el.style.display='block';el.classList.remove('err-in');void el.offsetWidth;el.classList.add('err-in');}
 function updateHint(){
   const m=METRICS.find(x=>x.k===document.getElementById('b-metric').value);
   document.getElementById('b-hint').textContent='Format: '+m.hint;
 }
 function addBench(){
-  const erEl=document.getElementById('b-error'); erEl.style.display='none'; erEl.classList.remove('err-in');
   const k=document.getElementById('b-metric').value;
   const m=METRICS.find(x=>x.k===k);
   const date=document.getElementById('b-date').value;
   const raw=document.getElementById('b-value').value.trim();
-  if(!date||!raw){showErr(erEl,'Please enter both a date and a value.');return;}
+  if(!date||!raw){ toast('Enter a date and a value','err'); return; }
   let v;
-  if(m.type==='time'){v=parseTime(raw);if(v===null){showErr(erEl,'Time format needed: mm:ss — e.g. 4:32');return;}}
-  else{v=parseFloat(raw);if(isNaN(v)){showErr(erEl,'Enter a number for this metric.');return;}}
+  if(m.type==='time'){ v=parseTime(raw); if(v===null){ toast('Use mm:ss format, e.g. 4:32','err'); return; } }
+  else{ v=parseFloat(raw); if(isNaN(v)){ toast('Enter a number','err'); return; } }
   if(!S.bench[k]) S.bench[k]=[];
   S.bench[k].push({date:date, v:v});
   save();
   document.getElementById('b-value').value='';
-  const lb=document.getElementById('bench-log-btn');
-  lb.classList.remove('log-success'); void lb.offsetWidth; lb.classList.add('log-success');
-  renderBench(); renderDash();
+  renderBench(); renderDash(); toast(m.n+' logged ✓');
 }
 function delBench(k,idx){
   S.bench[k].splice(idx,1); save(); renderBench(); renderDash();
@@ -905,12 +928,12 @@ function renderBench(){
 function exportData(){
   const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='hyrox-progress-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+  a.download='hyrox-progress-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); toast('Backup downloaded ✓');
 }
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ const s=document.getElementById('import-status'); try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{}},JSON.parse(r.result)); save(); renderAll(); s.innerHTML='<span class="green">Data imported.</span>'; setTimeout(()=>{s.textContent='';},3000); }catch(e){ s.innerHTML='<span class="red">Invalid file — export from this app first.</span>'; setTimeout(()=>{s.textContent='';},4000); } };
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{}},JSON.parse(r.result)); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
   r.readAsText(f);
 }
 
@@ -949,7 +972,7 @@ function renderLifts(){
 function renderPctTable(){
   const el=document.getElementById('pct-table'); if(!el) return;
   const set=LIFTS.filter(L=>S.oneRM[L.k] && parseFloat(S.oneRM[L.k])>0);
-  if(!set.length){ el.innerHTML='<div class="muted" style="font-size:13px">No 1RMs set yet. Enter your lifts above to see working weights here.</div>'; return; }
+  if(!set.length){ el.innerHTML='<div class="muted" style="font-size:13px">No 1RMs entered yet — add one above to see your working weights.</div>'; return; }
   const pcts=[60,65,70,75,80,85,90,95,100];
   el.innerHTML='<div style="overflow-x:auto"><table class="pcttable"><thead><tr><th>Lift</th>'+pcts.map(p=>'<th>'+p+'%</th>').join('')+'</tr></thead><tbody>'+
     set.map(L=>{ const rm=parseFloat(S.oneRM[L.k]);
