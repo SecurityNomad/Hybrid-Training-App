@@ -268,6 +268,20 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
   header{padding-top:16px}
   h2.sec{margin-top:22px}
 }
+/* Tier 1: rest timer · RPE target · undo */
+.toast-wrap{bottom:168px}
+.rest-timer{position:fixed;left:50%;transform:translateX(-50%);bottom:100px;z-index:61;display:none;align-items:center;gap:10px;background:var(--elev);border:1px solid var(--line-strong);border-radius:14px;padding:9px 12px;box-shadow:var(--shadow)}
+.rest-timer.show{display:flex}
+.rest-timer .rt-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rest-timer .rt-time{font-size:24px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.05;min-width:64px}
+.rest-timer.done .rt-time{color:var(--green)}
+.rest-timer button{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.rest-timer .rt-primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.restbtn{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.restbtn:hover{color:var(--accent);border-color:var(--accent-line)}
+.toast-undo{background:transparent;border:none;color:var(--accent);font-weight:800;cursor:pointer;font-size:13px;margin-left:6px;pointer-events:auto}
+.rpe-tgt{color:var(--accent2);font-weight:700}
+@media(max-width:640px){ .toast-wrap{bottom:150px} .rest-timer{bottom:84px} }
 </style>
 </head>
 <body>
@@ -433,6 +447,13 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
   </div>
 </div>
 
+<div class="rest-timer" id="restTimer">
+  <div><div class="rt-label" id="rtLabel">Rest</div><div class="rt-time" id="rtTime">0:00</div></div>
+  <button onclick="rtAdd()">+15s</button>
+  <button id="rtToggle" onclick="rtToggle()">Pause</button>
+  <button class="rt-primary" onclick="rtClose()">Done</button>
+</div>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <footer>HYROX Prep · Built for Raha · 13-week build · Your data is saved on this device. Use Export in Benchmarks to back it up.</footer>
@@ -577,7 +598,7 @@ const METRICS = [
 ];
 
 /* =================== STATE =================== */
-let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}};
+let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -657,6 +678,23 @@ function jumpToToday(){ const cw=currentWeek(); if(cw>=1&&cw<=13){ const wk=WEEK
   document.getElementById('tab-plan').classList.add('active');
   renderPlan(); window.scrollTo(0,0);
 }
+
+/* ---- Tier 1: rest timer · RPE targets · e1RM history · undo ---- */
+function fmtClock(s){ s=Math.max(0,Math.round(s)); const m=Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); }
+function targetRPE(item,sType,isDeload){ if(isDeload || /Deload|Primer|Openers/.test(sType||'')) return '5–6'; const pm=item.match(/@\s*(\d+)/), reps=prescReps(item); if(pm){ const p=+pm[1]; if(p>=82) return '8–9'; if(p>=75) return '7–8'; return '6–7'; } if(reps&&reps<=4) return '8'; if(reps&&reps<=6) return '7–8'; return '7'; }
+function suggestRest(item){ const pm=item.match(/@\s*(\d+)/), reps=prescReps(item)||8; if((pm&&+pm[1]>=82)||reps<=3) return 180; if((pm&&+pm[1]>=75)||reps<=6) return 150; if(reps<=8) return 120; return 90; }
+function recordE1RM(liftKey,e1rm){ if(!liftKey||!e1rm) return; if(!S.e1rmHist) S.e1rmHist={}; if(!S.e1rmHist[liftKey]) S.e1rmHist[liftKey]=[]; const d=new Date().toISOString().slice(0,10), val=Math.round(e1rm*10)/10; const ex=S.e1rmHist[liftKey].find(x=>x.date===d); if(ex){ if(val>ex.v) ex.v=val; } else { S.e1rmHist[liftKey].push({date:d,v:val,w:currentWeek()}); } }
+function toastUndo(msg,undoFn){ let w=document.getElementById('toastWrap'); if(!w){ w=document.createElement('div'); w.id='toastWrap'; w.className='toast-wrap'; document.body.appendChild(w); } const t=document.createElement('div'); t.className='toast'; t.style.pointerEvents='auto'; t.innerHTML='<span class="tdot"></span>'+msg+' <button class="toast-undo">Undo</button>'; w.appendChild(t); let done=false; t.querySelector('.toast-undo').addEventListener('click',()=>{ if(done) return; done=true; undoFn(); t.remove(); }); setTimeout(()=>{ if(done) return; t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(()=>t.remove(),300); },5000); }
+/* rest timer */
+var _rt={sec:0,total:0,id:null,paused:false};
+function _rtEl(id){ return document.getElementById(id); }
+function rtRender(){ const el=_rtEl('restTimer'); if(el && !el.classList.contains('done')) _rtEl('rtTime').textContent=fmtClock(_rt.sec); if(_rtEl('rtToggle')) _rtEl('rtToggle').textContent=_rt.paused?'Resume':'Pause'; }
+function startRest(sec,label){ if(_rt.id) clearInterval(_rt.id); _rt.sec=sec||90; _rt.total=_rt.sec; _rt.paused=false; const el=_rtEl('restTimer'); el.classList.add('show'); el.classList.remove('done'); _rtEl('rtLabel').textContent=(label||'Rest')+' · rest'; rtRender(); _rt.id=setInterval(rtTick,1000); }
+function rtTick(){ if(_rt.paused) return; _rt.sec--; if(_rt.sec<=0){ _rt.sec=0; clearInterval(_rt.id); _rt.id=null; const el=_rtEl('restTimer'); el.classList.add('done'); _rtEl('rtTime').textContent='GO'; try{ navigator.vibrate&&navigator.vibrate([120,60,120]); }catch(e){} rtBeep(); setTimeout(()=>{ el.classList.remove('show','done'); },4000); return; } rtRender(); }
+function rtToggle(){ _rt.paused=!_rt.paused; rtRender(); }
+function rtAdd(){ _rt.sec+=15; _rt.total+=15; const el=_rtEl('restTimer'); if(el.classList.contains('done')){ el.classList.remove('done'); if(!_rt.id) _rt.id=setInterval(rtTick,1000); } rtRender(); }
+function rtClose(){ if(_rt.id) clearInterval(_rt.id); _rt.id=null; _rtEl('restTimer').classList.remove('show','done'); }
+function rtBeep(){ try{ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; const a=new AC(); const o=a.createOscillator(), g=a.createGain(); o.connect(g); g.connect(a.destination); o.frequency.value=880; g.gain.value=0.06; o.start(); setTimeout(()=>{ o.stop(); a.close(); },200); }catch(e){} }
 const DEMO_LIB = ['SkiErg','Sled Push','Sled Pull','Burpee Broad Jump','Rowing','Farmers Carry','Sandbag Lunges','Wall Balls','Back Squat','Deadlift','Romanian Deadlift','Bench Press','Push Press','Overhead Press','Pull-up','Hip Thrust','Kettlebell Swing'];
 
 function epley(w,reps){ return w*(1+reps/30); }
@@ -744,7 +782,7 @@ function renderSession(wk,s,i){
   const items=isLift?loggableItems(s.x):[];
   const anyLog=items.some((it,j)=>logHasData(id+'x'+j));
   const logBtn=items.length?'<button class="logbtn'+(anyLog?' has':'')+'" data-log="'+id+'">'+(anyLog?'✓ ':'')+'Log working sets</button>':'';
-  const logger=items.length?'<div class="logger'+(openLoggers.has(id)?' open':'')+'">'+items.map((it,j)=>renderExercise(id,it,j)).join('')+'</div>':'';
+  const logger=items.length?'<div class="logger'+(openLoggers.has(id)?' open':'')+'">'+items.map((it,j)=>renderExercise(id,it,j,s.t,wk.deload)).join('')+'</div>':'';
   const hasNote=!!(S.notes[id]&&S.notes[id].trim()), nOpen=openNotes.has(id);
   const noteBtn='<button class="notebtn'+(hasNote?' has':'')+'" data-note="'+id+'">'+(hasNote?'📝 Notes ✓':'＋ Notes')+'</button>';
   const notePv=(hasNote&&!nOpen)?'<div class="notepv">'+escapeHtml(S.notes[id])+'</div>':'';
@@ -752,21 +790,21 @@ function renderSession(wk,s,i){
   return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
     '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+logger+'<div class="sessfoot">'+noteBtn+'</div>'+notePv+noteWrap+'</div></div>';
 }
-function renderExercise(id,item,j){
+function renderExercise(id,item,j,sType,isDeload){
   const key=id+'x'+j;
-  const tgtSets=prescSets(item)||1, tgtReps=prescReps(item), pw=prescWeight(item), name=movementName(item);
+  const tgtSets=prescSets(item)||1, tgtReps=prescReps(item), pw=prescWeight(item), name=movementName(item), L=detectLift(item), lk=L?L.k:'';
   const sets=(S.log[key]&&Array.isArray(S.log[key].sets))?S.log[key].sets:Array.from({length:tgtSets},()=>({w:'',reps:'',rpe:''}));
   let rows='<div class="setgrid"><span class="sh"></span><span class="sh">Weight kg</span><span class="sh">Reps</span><span class="sh">RPE</span>';
   sets.forEach((st,k)=>{
     rows+='<span class="snum">'+(k+1)+'</span>'+
-      '<input type="number" inputmode="decimal" step="2.5" data-key="'+key+'" data-idx="'+k+'" data-f="w" data-tgt="'+tgtSets+'" value="'+(st.w||'')+'" placeholder="'+(pw!==''?fmtKg(pw):'–')+'">'+
-      '<input type="number" inputmode="numeric" data-key="'+key+'" data-idx="'+k+'" data-f="reps" data-tgt="'+tgtSets+'" value="'+(st.reps||'')+'" placeholder="'+(tgtReps||'–')+'">'+
+      '<input type="number" inputmode="decimal" step="2.5" data-key="'+key+'" data-idx="'+k+'" data-f="w" data-tgt="'+tgtSets+'" data-lift="'+lk+'" value="'+(st.w||'')+'" placeholder="'+(pw!==''?fmtKg(pw):'–')+'">'+
+      '<input type="number" inputmode="numeric" data-key="'+key+'" data-idx="'+k+'" data-f="reps" data-tgt="'+tgtSets+'" data-lift="'+lk+'" value="'+(st.reps||'')+'" placeholder="'+(tgtReps||'–')+'">'+
       '<input type="number" inputmode="decimal" step="0.5" data-key="'+key+'" data-idx="'+k+'" data-f="rpe" data-tgt="'+tgtSets+'" value="'+(st.rpe||'')+'" placeholder="–">';
   });
   rows+='</div>';
-  const controls='<div class="row" style="gap:8px;margin-top:8px"><button class="addset" data-add="'+key+'" data-tgt="'+tgtSets+'">＋ add set</button>'+
+  const controls='<div class="row" style="gap:8px;margin-top:8px"><button class="restbtn" data-rest="'+suggestRest(item)+'" data-restlabel="'+name.replace(/"/g,'')+'">⏱ '+fmtClock(suggestRest(item))+' rest</button><button class="addset" data-add="'+key+'" data-tgt="'+tgtSets+'">＋ add set</button>'+
     (sets.length>1?'<button class="addset" data-del="'+key+'" style="color:var(--red);border-color:var(--line)">－ remove last</button>':'')+'</div>';
-  const e=exerciseE1RM(key), L=detectLift(item);
+  const e=exerciseE1RM(key);
   let prog='';
   if(e){ prog='<div class="e1rm">Best set → est. 1RM <b>'+fmtKg(round2_5(e))+' kg</b>';
     if(L){ const cur=S.oneRM[L.k]?parseFloat(S.oneRM[L.k]):0;
@@ -775,7 +813,8 @@ function renderExercise(id,item,j){
     }
     prog+='</div>';
   }
-  const tgtLine='<div class="setrow-target">Target: '+tgtSets+' × '+(tgtReps||'—')+(pw!==''?' @ ~'+fmtKg(pw)+' kg':'')+'</div>';
+  const rpeT=targetRPE(item,sType,isDeload);
+  const tgtLine='<div class="setrow-target">Target: '+tgtSets+' × '+(tgtReps||'—')+(pw!==''?' @ ~'+fmtKg(pw)+' kg':'')+' · <span class="rpe-tgt">RPE '+rpeT+'</span></div>';
   return '<div class="logex"><div class="lx">'+annotateDesc(item)+' <button class="demobtn" data-demo="'+name.replace(/"/g,'')+'">▶ demo</button></div>'+tgtLine+rows+controls+prog+'</div>';
 }
 function wireWeekView(el){
@@ -790,6 +829,7 @@ function wireWeekView(el){
     while(S.log[key].sets.length<=idx) S.log[key].sets.push({w:'',reps:'',rpe:''});
     if(v) S.log[key].sets[idx][f]=v; else delete S.log[key].sets[idx][f];
     if(!S.log[key].sets.some(s=>s.w||s.reps||s.rpe)) delete S.log[key];
+    const lift=inp.dataset.lift; if(lift && S.log[key]){ const e=exerciseE1RM(key); if(e) recordE1RM(lift,e); }
     save(); savedFlash(); renderWeekView();
   }));
   el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
@@ -798,10 +838,15 @@ function wireWeekView(el){
     S.log[key].sets.push({w:'',reps:'',rpe:''}); save(); renderWeekView();
   }));
   el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
-    const key=b.dataset.del; if(S.log[key]&&S.log[key].sets){ S.log[key].sets.pop(); if(S.log[key].sets.length===0||!S.log[key].sets.some(s=>s.w||s.reps||s.rpe)) delete S.log[key]; save(); renderWeekView(); }
+    const key=b.dataset.del; if(!(S.log[key]&&S.log[key].sets)) return;
+    const popped=S.log[key].sets.pop(), hadData=popped&&(popped.w||popped.reps||popped.rpe);
+    if(S.log[key].sets.length===0||!S.log[key].sets.some(s=>s.w||s.reps||s.rpe)) delete S.log[key];
+    save(); renderWeekView();
+    if(hadData) toastUndo('Set removed', ()=>{ if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:[]}; S.log[key].sets.push(popped); save(); renderWeekView(); });
   }));
   el.querySelectorAll('[data-setrm]').forEach(b=>b.addEventListener('click',()=>{ S.oneRM[b.dataset.setrm]=b.dataset.val; save(); renderWeekView(); renderLifts(); toast(((LIFTS.find(l=>l.k===b.dataset.setrm)||{}).n||'Lift')+' 1RM updated ✓'); }));
   el.querySelectorAll('.demobtn').forEach(b=>b.addEventListener('click',()=>openDemo(b.dataset.demo)));
+  el.querySelectorAll('.restbtn').forEach(b=>b.addEventListener('click',()=>startRest(+b.dataset.rest,b.dataset.restlabel)));
   el.querySelectorAll('.notebtn').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.note; openNotes.has(id)?openNotes.delete(id):openNotes.add(id); renderWeekView(); }));
   el.querySelectorAll('.noteta').forEach(ta=>ta.addEventListener('input',()=>{
     const id=ta.dataset.noteid, v=ta.value;
@@ -893,7 +938,9 @@ function addBench(){
   renderBench(); renderDash(); toast(m.n+' logged ✓');
 }
 function delBench(k,idx){
+  const removed=S.bench[k][idx];
   S.bench[k].splice(idx,1); save(); renderBench(); renderDash();
+  toastUndo('Deleted '+((METRICS.find(m=>m.k===k)||{}).n||'entry'), ()=>{ if(!S.bench[k]) S.bench[k]=[]; S.bench[k].splice(idx,0,removed); save(); renderBench(); renderDash(); });
 }
 function chartSVG(arr, m){
   if(arr.length<2) return '<div class="muted" style="font-size:12.5px;padding:6px 0">Log 2+ entries to see the trend chart.</div>';
@@ -933,7 +980,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{}},JSON.parse(r.result)); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{}},JSON.parse(r.result)); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
   r.readAsText(f);
 }
 
