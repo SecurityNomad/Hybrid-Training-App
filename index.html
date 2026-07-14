@@ -282,6 +282,18 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
 .toast-undo{background:transparent;border:none;color:var(--accent);font-weight:800;cursor:pointer;font-size:13px;margin-left:6px;pointer-events:auto}
 .rpe-tgt{color:var(--accent2);font-weight:700}
 @media(max-width:640px){ .toast-wrap{bottom:150px} .rest-timer{bottom:84px} }
+/* Tier 2-4: charts · prep · reminders */
+.chart-legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:6px}
+.chart-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.sessfoot{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.prepbtn{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.prepwrap{display:none;margin-top:10px;background:var(--accent-tint);border:1px solid var(--accent-line);border-radius:10px;padding:12px 14px}
+.prepwrap.open{display:block}
+.prep-item{font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.prep-item:last-child{margin-bottom:0}
+.prep-item b{color:var(--text);text-transform:uppercase;font-size:11px;letter-spacing:.06em}
+.mob-card ul.clean li b{color:var(--accent)}
+.mob-demos{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -318,6 +330,7 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
   <h2 class="sec">Latest Benchmarks</h2>
   <div class="card"><table id="d-benchtable"><thead><tr><th>Metric</th><th>Latest</th><th>First</th><th>Trend</th></tr></thead><tbody></tbody></table>
   <div class="muted" style="font-size:12.5px;margin-top:10px">Log new values in the Benchmarks tab. Test weeks: baseline W1 · retest W7 · retest W10.</div></div>
+  <div class="card" id="reminders" style="margin-top:14px"></div>
 </section>
 
 <!-- ============ PLAN ============ -->
@@ -358,6 +371,10 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
   <h2 class="sec">Percentage reference</h2>
   <div class="card"><div id="pct-table"></div>
   <div class="muted" style="font-size:12px;margin-top:10px">Rounded to the nearest 2.5 kg. Set a 1RM above to populate this table.</div></div>
+  <h2 class="sec">1RM progression</h2>
+  <div class="card"><div id="e1rm-charts"></div></div>
+  <h2 class="sec">Effort / RPE tracking</h2>
+  <div class="card"><div class="muted" style="font-size:12.5px;margin-bottom:10px">Your logged RPE against the weekly target. A rising gap (actual above target) is an early under-recovery signal.</div><div id="rpe-chart"></div></div>
   <h2 class="sec">Exercise form demos</h2>
   <div class="card"><div class="muted" style="font-size:12.5px;margin-bottom:10px">Tap a movement for form-demo videos. Pin your favourite in the popup and it embeds next time. There's also a <b>▶ demo</b> button on every logged exercise in the plan.</div>
   <div id="demo-lib"></div></div>
@@ -370,6 +387,7 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
     <button data-ref="recovery">Recovery</button>
     <button data-ref="raceweek">Race Week</button>
     <button data-ref="mistakes">Mistakes</button>
+    <button data-ref="mobility">Mobility &amp; Power</button>
   </div>
   <div class="refsec active" id="ref-strategy">
   <h2 class="sec">Pacing the 8 × 1km runs</h2>
@@ -434,6 +452,37 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
   <div class="refsec" id="ref-mistakes">
   <h2 class="sec">Common mistakes at your level</h2>
   <div id="mistakes-list" class="grid" style="grid-template-columns:1fr"></div>
+  </div>
+  <div class="refsec" id="ref-mobility">
+  <h2 class="sec">Daily mobility · T-spine, hips, ankles</h2>
+  <div class="card mob-card"><div class="muted" style="font-size:12.5px;margin-bottom:8px">10 minutes on most days, aimed at your weak points: overhead/T-spine, hip mobility, and ankle range for squat depth and wall balls.</div>
+  <ul class="clean">
+    <li><b>T-spine openers</b> — 8 per side. Unlocks the overhead position.</li>
+    <li><b>90/90 hip switches</b> — 10 per side. Internal and external hip rotation for lunges and squats.</li>
+    <li><b>Deep-squat ankle rocks</b> — 10 per side in a held squat. More ankle range means better sled drive and squat depth.</li>
+    <li><b>Shoulder CARs</b> — 3 slow circles per side. Overhead isometric prep.</li>
+    <li><b>Couch stretch</b> — 45s per side. Hip-flexor length after all the running.</li>
+  </ul>
+  <div class="mob-demos"><button class="demobtn" data-demo="T-spine mobility drill">▶ T-spine</button><button class="demobtn" data-demo="90/90 hip mobility">▶ 90/90 hips</button><button class="demobtn" data-demo="ankle mobility for squat">▶ Ankles</button><button class="demobtn" data-demo="shoulder CARs">▶ Shoulder CARs</button></div>
+  </div>
+  <h2 class="sec">Plyometrics (power) · by block</h2>
+  <div class="card mob-card"><div class="muted" style="font-size:12.5px;margin-bottom:8px">Done as a <b>power primer</b> before your main lift on strength days. Quality over fatigue, full recovery between reps. Builds explosive power that carries into running economy and sled starts.</div>
+  <ul class="clean">
+    <li><b>Block 1 · foundation</b> — box jumps 3×3, pogo hops 3×20. Learn soft landings and a stiff-ankle bounce.</li>
+    <li><b>Block 2 · build</b> — box jumps 4×3, broad jumps 3×3. Add horizontal power at max intent.</li>
+    <li><b>Block 3 · express</b> — depth jumps 3×3 off a low box, broad jumps 3×3. Reactive strength, crisp and rested.</li>
+  </ul>
+  <div class="mob-demos"><button class="demobtn" data-demo="box jump technique">▶ Box jump</button><button class="demobtn" data-demo="broad jump technique">▶ Broad jump</button><button class="demobtn" data-demo="depth jump plyometric">▶ Depth jump</button><button class="demobtn" data-demo="pogo hops plyometric drill">▶ Pogo hops</button></div>
+  </div>
+  <h2 class="sec">Agility &amp; roxzone transitions</h2>
+  <div class="card mob-card"><div class="muted" style="font-size:12.5px;margin-bottom:8px">Change-of-direction and quick feet sharpen the running-to-station transitions where HYROX time quietly leaks.</div>
+  <ul class="clean">
+    <li><b>Running prep</b> — A-skips 2×20m, high-knees 2×20m, then 4×20m strides before interval days.</li>
+    <li><b>5-10-5 pro agility</b> — 3 reps in Block 3. Sharp deceleration and re-acceleration.</li>
+    <li><b>Roxzone rehearsal</b> — on hybrid and sim days: brisk walk-in, 3-breath reset, controlled first 200m out, deliberate chalk and grip timing.</li>
+  </ul>
+  <div class="mob-demos"><button class="demobtn" data-demo="A-skips running drill">▶ A-skips</button><button class="demobtn" data-demo="5-10-5 pro agility drill">▶ 5-10-5 agility</button></div>
+  </div>
   </div>
 </section>
 </div>
@@ -598,7 +647,7 @@ const METRICS = [
 ];
 
 /* =================== STATE =================== */
-let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}};
+let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
 
@@ -695,6 +744,116 @@ function rtToggle(){ _rt.paused=!_rt.paused; rtRender(); }
 function rtAdd(){ _rt.sec+=15; _rt.total+=15; const el=_rtEl('restTimer'); if(el.classList.contains('done')){ el.classList.remove('done'); if(!_rt.id) _rt.id=setInterval(rtTick,1000); } rtRender(); }
 function rtClose(){ if(_rt.id) clearInterval(_rt.id); _rt.id=null; _rtEl('restTimer').classList.remove('show','done'); }
 function rtBeep(){ try{ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; const a=new AC(); const o=a.createOscillator(), g=a.createGain(); o.connect(g); g.connect(a.destination); o.frequency.value=880; g.gain.value=0.06; o.start(); setTimeout(()=>{ o.stop(); a.close(); },200); }catch(e){} }
+
+/* ================= Tier 2: progression charts ================= */
+let openPrep = new Set();
+function multiLineSVG(series){
+  const W=560,H=170,P=34;
+  const allY=series.flatMap(s=>s.pts.map(p=>p.y)); if(!allY.length) return '';
+  let min=Math.min(...allY), max=Math.max(...allY); if(min===max){ min-=1; max+=1; }
+  const pad=(max-min)*0.15; min-=pad; max+=pad;
+  const X=x=>P+(W-2*P)*((x-1)/12), Y=y=>H-P-(H-2*P)*((y-min)/(max-min));
+  let svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+  [1,5,10,13].forEach(w=>{ svg+='<line x1="'+X(w).toFixed(1)+'" y1="'+P+'" x2="'+X(w).toFixed(1)+'" y2="'+(H-P)+'" stroke="var(--line)" stroke-width="1" opacity="0.35"/><text x="'+X(w).toFixed(1)+'" y="'+(H-12)+'" font-size="9" fill="var(--muted)" text-anchor="middle">W'+w+'</text>'; });
+  series.forEach(s=>{ const pts=s.pts.slice().sort((a,b)=>a.x-b.x);
+    if(pts.length>1) svg+='<polyline points="'+pts.map(p=>X(p.x).toFixed(1)+','+Y(p.y).toFixed(1)).join(' ')+'" fill="none" stroke="'+s.color+'" stroke-width="2.4" stroke-linejoin="round"/>';
+    svg+=pts.map(p=>'<circle cx="'+X(p.x).toFixed(1)+'" cy="'+Y(p.y).toFixed(1)+'" r="3.2" fill="'+s.color+'"/>').join(''); });
+  return svg+'</svg>';
+}
+function e1rmWeekly(hist){ const byW={}; hist.forEach(e=>{ const w=e.w||1; if(!byW[w]||e.v>byW[w]) byW[w]=e.v; }); return Object.keys(byW).map(w=>({x:+w,y:byW[w]})).sort((a,b)=>a.x-b.x); }
+function renderE1rmCharts(){
+  const el=document.getElementById('e1rm-charts'); if(!el) return;
+  const hist=S.e1rmHist||{}, lifts=LIFTS.filter(L=>hist[L.k]&&hist[L.k].length);
+  if(!lifts.length){ el.innerHTML='<div class="muted" style="font-size:13px">No data yet. Log weight × reps on your main lifts and your estimated 1RM will chart here across the 13 weeks.</div>'; return; }
+  el.innerHTML=lifts.map(L=>{ const pts=e1rmWeekly(hist[L.k]), latest=pts[pts.length-1], first=pts[0], delta=pts.length>1?(latest.y-first.y):0;
+    const dtxt=pts.length>1?('<span class="'+(delta>=0?'green':'red')+'" style="font-weight:700">'+(delta>=0?'▲ +':'▼ ')+fmtKg(Math.abs(delta))+' kg</span>'):'';
+    return '<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><div style="font-weight:750">'+L.n+'</div><div class="muted" style="font-size:12.5px">latest <b class="accent">'+fmtKg(latest.y)+' kg</b> '+dtxt+'</div></div><div class="chartbox">'+multiLineSVG([{pts:pts,color:'var(--accent)'}])+'</div></div>';
+  }).join('');
+}
+function rpeMid(band){ const p=String(band).split('–').map(Number); return p.length===2?(p[0]+p[1])/2:(p[0]||7); }
+function rpeSeries(){
+  const byW={};
+  Object.keys(S.log||{}).forEach(key=>{ const m=key.match(/^w(\d+)s(\d+)x(\d+)$/); if(!m) return;
+    const W=+m[1], si=+m[2], xi=+m[3], wk=WEEKS.find(w=>w.w===W); if(!wk||!wk.sess[si]) return;
+    const sess=wk.sess[si], item=loggableItems(sess.x)[xi]; if(!item) return;
+    const rec=S.log[key]; if(!(rec&&rec.sets)) return;
+    const rpes=rec.sets.map(s=>parseFloat(s.rpe)).filter(v=>!isNaN(v)&&v>0); if(!rpes.length) return;
+    const act=rpes.reduce((a,b)=>a+b,0)/rpes.length, exp=rpeMid(targetRPE(item,sess.t,wk.deload));
+    if(!byW[W]) byW[W]={a:[],e:[]}; byW[W].a.push(act); byW[W].e.push(exp); });
+  const avg=arr=>arr.reduce((a,b)=>a+b,0)/arr.length, exp=[], act=[];
+  Object.keys(byW).forEach(w=>{ exp.push({x:+w,y:+avg(byW[w].e).toFixed(2)}); act.push({x:+w,y:+avg(byW[w].a).toFixed(2)}); });
+  return {exp:exp.sort((a,b)=>a.x-b.x), act:act.sort((a,b)=>a.x-b.x)};
+}
+function renderRpeChart(){
+  const el=document.getElementById('rpe-chart'); if(!el) return;
+  const s=rpeSeries();
+  if(!s.act.length){ el.innerHTML='<div class="muted" style="font-size:13px">Log an RPE on your sets and this charts your actual effort against the weekly target.</div>'; return; }
+  el.innerHTML='<div class="chartbox">'+multiLineSVG([{pts:s.exp,color:'var(--muted)'},{pts:s.act,color:'var(--accent)'}])+'</div><div class="chart-legend"><span><i style="background:var(--accent)"></i>Actual RPE</span><span><i style="background:var(--muted)"></i>Target RPE</span></div>';
+}
+
+/* ================= Tier 3: per-session prep ================= */
+function sessionPrep(wk,s){
+  const b=wk.block, t=s.t;
+  let power='', prep='', mob='10-min mobility: T-spine openers, 90/90 hip switches, deep-squat ankle rocks. Hits your overhead and hip weak points.';
+  if(/Strength|Openers/.test(t)){
+    power = b===1 ? 'Power primer before the main lift: box jumps 3×3 + pogo hops 3×20. Soft landings, full reset between reps.'
+          : b===2 ? 'Power primer: box jumps 4×3 + broad jumps 3×3. Max intent, walk back each rep.'
+          : 'Power primer: depth jumps 3×3 off a low box + broad jumps 3×3. Crisp and explosive, long rest.';
+  }
+  if(/Run/.test(t)) prep = 'Running prep: A-skips 2×20m, high-knees 2×20m, ankle pogos 3×20, then 4×20m strides.'+(b===3?' Add 5-10-5 agility ×3 for change-of-direction.':'');
+  if(/Hybrid|RACE SIM/.test(t)) prep = 'Roxzone drill: rehearse each transition — brisk walk-in, 3-breath reset, controlled first 200m out, deliberate chalk and grip timing.';
+  if(/Recovery|Aerobic|Skills|Prep/.test(t)) mob = 'Extended mobility (15–20 min): T-spine, hips, ankles, plus shoulder CARs. This is your prehab — do it properly on easy days.';
+  return {power, prep, mob};
+}
+
+/* ================= Tier 4: reminders ================= */
+function renderReminders(){
+  const el=document.getElementById('reminders'); if(!el) return;
+  const supported='Notification' in window, perm=supported?Notification.permission:'unsupported';
+  const status = perm==='granted'?'<span class="green">on</span>':perm==='denied'?'<span class="red">blocked in browser settings</span>':'off';
+  el.innerHTML='<div class="eyebrow">Reminders</div>'+
+    '<div style="font-size:13.5px;margin:8px 0 12px;color:var(--muted)">Get nudged for today\'s session, deloads, retests and race week.</div>'+
+    '<div class="row">'+(supported?'<button class="btn" onclick="enableNotify()">'+(perm==='granted'?'Notifications on ✓':'Enable notifications')+'</button>':'')+
+    '<button class="btn ghost" onclick="downloadICS()">⤓ Add plan to calendar (.ics)</button></div>'+
+    '<div class="muted" style="font-size:12px;margin-top:10px">In-app notifications: '+status+'. Calendar import is the most reliable way to get reminders on iPhone (Apple limits web push). The .ics adds every session, deload, retest and race day with an alert 3h before.</div>';
+}
+function enableNotify(){
+  if(!('Notification' in window)){ toast('Notifications not supported here','err'); return; }
+  Notification.requestPermission().then(p=>{ if(p==='granted'){ S.prefs=S.prefs||{}; S.prefs.remind=true; save(); toast('Notifications enabled ✓'); updateBadge(); maybeNudge(true); } else { toast('Notifications not enabled','err'); } renderReminders(); });
+}
+function maybeNudge(force){
+  try{ if(!('Notification' in window)||Notification.permission!=='granted') return;
+    const ts=todaySession(); if(!(ts.wk&&ts.s)) return;
+    const sid='w'+ts.wk.w+'s'+ts.wk.sess.indexOf(ts.s); if(S.done[sid]) return;
+    const key='nudge-'+sid+'-'+new Date().toISOString().slice(0,10);
+    if(!force && localStorage.getItem(key)) return; localStorage.setItem(key,'1');
+    new Notification('HYROX today: '+ts.s.t, {body: ts.s.n+' · Week '+ts.wk.w, icon:'icon-192.png'});
+  }catch(e){}
+}
+function updateBadge(){
+  try{ if(!navigator.setAppBadge) return; const cw=currentWeek();
+    if(cw<1||cw>13){ navigator.clearAppBadge&&navigator.clearAppBadge(); return; }
+    const wk=WEEKS.find(w=>w.w===cw); let pending=0; wk.sess.forEach((s,i)=>{ if(!S.done['w'+cw+'s'+i]) pending++; });
+    if(pending>0) navigator.setAppBadge(pending); else navigator.clearAppBadge&&navigator.clearAppBadge();
+  }catch(e){}
+}
+function _p2(n){ return String(n).padStart(2,'0'); }
+function icsDT(d){ return d.getFullYear()+_p2(d.getMonth()+1)+_p2(d.getDate())+'T'+_p2(d.getHours())+_p2(d.getMinutes())+'00'; }
+function icsEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
+function sessionDate(w,dayName){ const off={Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6}[dayName]||0; const d=new Date(PLAN_START); d.setDate(d.getDate()+(w-1)*7+off); return d; }
+function buildICS(){
+  let out='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//HYROX Prep//Raha//EN\r\nCALSCALE:GREGORIAN\r\n';
+  const stamp=icsDT(new Date());
+  WEEKS.forEach(wk=>wk.sess.forEach((s,i)=>{
+    let d, summary;
+    if(s.d==='RACE'){ d=new Date(RACE_DATE); summary='🏁 HYROX RACE DAY'; d.setHours(8,0,0,0); }
+    else { d=sessionDate(wk.w,s.d); summary='HYROX W'+wk.w+': '+s.t+' — '+s.n; d.setHours(18,0,0,0); }
+    const end=new Date(d); end.setHours(d.getHours()+1,15,0,0);
+    out+='BEGIN:VEVENT\r\nUID:hyrox-w'+wk.w+'s'+i+'@raha\r\nDTSTAMP:'+stamp+'\r\nDTSTART:'+icsDT(d)+'\r\nDTEND:'+icsDT(end)+'\r\nSUMMARY:'+icsEsc(summary)+'\r\nDESCRIPTION:'+icsEsc((s.x||'').replace(/\n/g,' '))+'\r\nBEGIN:VALARM\r\nTRIGGER:-PT3H\r\nACTION:DISPLAY\r\nDESCRIPTION:'+icsEsc(summary)+'\r\nEND:VALARM\r\nEND:VEVENT\r\n';
+  }));
+  return out+'END:VCALENDAR\r\n';
+}
+function downloadICS(){ const blob=new Blob([buildICS()],{type:'text/calendar'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='hyrox-plan.ics'; a.click(); toast('Calendar file downloaded ✓'); }
 const DEMO_LIB = ['SkiErg','Sled Push','Sled Pull','Burpee Broad Jump','Rowing','Farmers Carry','Sandbag Lunges','Wall Balls','Back Squat','Deadlift','Romanian Deadlift','Bench Press','Push Press','Overhead Press','Pull-up','Hip Thrust','Kettlebell Swing'];
 
 function epley(w,reps){ return w*(1+reps/30); }
@@ -787,8 +946,14 @@ function renderSession(wk,s,i){
   const noteBtn='<button class="notebtn'+(hasNote?' has':'')+'" data-note="'+id+'">'+(hasNote?'📝 Notes ✓':'＋ Notes')+'</button>';
   const notePv=(hasNote&&!nOpen)?'<div class="notepv">'+escapeHtml(S.notes[id])+'</div>':'';
   const noteWrap='<div class="notewrap'+(nOpen?' open':'')+'"><textarea class="noteta" data-noteid="'+id+'" placeholder="How did it go? e.g. 4 of 5 × 600m done, legs heavy — hold pace and add the 5th next time.">'+escapeHtml(S.notes[id]||'')+'</textarea></div>';
+  const prep=sessionPrep(wk,s), prepOpen=openPrep.has(id);
+  const prepBtn='<button class="prepbtn" data-prep="'+id+'">🔥 Warm-up &amp; mobility</button>';
+  const prepBlock='<div class="prepwrap'+(prepOpen?' open':'')+'">'+
+    (prep.power?'<div class="prep-item"><b>Plyometrics</b><br>'+prep.power+'</div>':'')+
+    (prep.prep?'<div class="prep-item"><b>Prep / agility</b><br>'+prep.prep+'</div>':'')+
+    '<div class="prep-item"><b>Mobility</b><br>'+prep.mob+'</div></div>';
   return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
-    '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+logger+'<div class="sessfoot">'+noteBtn+'</div>'+notePv+noteWrap+'</div></div>';
+    '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+logger+'<div class="sessfoot">'+prepBtn+noteBtn+'</div>'+prepBlock+notePv+noteWrap+'</div></div>';
 }
 function renderExercise(id,item,j,sType,isDeload){
   const key=id+'x'+j;
@@ -847,6 +1012,7 @@ function wireWeekView(el){
   el.querySelectorAll('[data-setrm]').forEach(b=>b.addEventListener('click',()=>{ S.oneRM[b.dataset.setrm]=b.dataset.val; save(); renderWeekView(); renderLifts(); toast(((LIFTS.find(l=>l.k===b.dataset.setrm)||{}).n||'Lift')+' 1RM updated ✓'); }));
   el.querySelectorAll('.demobtn').forEach(b=>b.addEventListener('click',()=>openDemo(b.dataset.demo)));
   el.querySelectorAll('.restbtn').forEach(b=>b.addEventListener('click',()=>startRest(+b.dataset.rest,b.dataset.restlabel)));
+  el.querySelectorAll('.prepbtn').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.prep; openPrep.has(id)?openPrep.delete(id):openPrep.add(id); renderWeekView(); }));
   el.querySelectorAll('.notebtn').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.note; openNotes.has(id)?openNotes.delete(id):openNotes.add(id); renderWeekView(); }));
   el.querySelectorAll('.noteta').forEach(ta=>ta.addEventListener('input',()=>{
     const id=ta.dataset.noteid, v=ta.value;
@@ -980,7 +1146,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{}},JSON.parse(r.result)); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{},prefs:{}},JSON.parse(r.result)); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
   r.readAsText(f);
 }
 
@@ -1027,8 +1193,8 @@ function renderPctTable(){
     }).join('')+'</tbody></table></div>';
 }
 
-function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); renderLifts(); renderDemoLib(); }
-initBench(); renderAll();
+function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); renderLifts(); renderDemoLib(); renderE1rmCharts(); renderRpeChart(); renderReminders(); }
+initBench(); renderAll(); try{ maybeNudge(); updateBadge(); }catch(e){}
 </script>
 <script>
 /* =================== PWA: offline + install =================== */
