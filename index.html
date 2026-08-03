@@ -300,8 +300,8 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
 .resultwrap{display:none;margin-top:10px;border-top:1px dashed var(--line);padding-top:12px}
 .resultwrap.open{display:block}
 .resgrid{display:grid;gap:10px 12px}
-.resgrid label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;flex-direction:column;gap:5px;font-family:var(--font-display)}
-.resf{min-height:48px;width:100%;font-family:var(--font-display);font-size:21px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.resgrid label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;min-width:0;font-family:var(--font-display)}
+.resf{display:block;width:100%;box-sizing:border-box;min-height:48px;margin-top:5px;font-family:var(--font-display);font-size:21px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
 .resf:not(:placeholder-shown){border-color:color-mix(in oklch,var(--accent) 50%,var(--line));color:var(--accent)}
 .resalt-l{display:block;margin-top:14px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .resalt{width:100%;min-height:62px;margin-top:6px;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;line-height:1.5;resize:vertical;outline:none}
