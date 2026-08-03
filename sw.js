@@ -1,5 +1,5 @@
 /* HYROX Prep — service worker (offline app shell) */
-const CACHE = 'hyrox-prep-v7';
+const CACHE = 'hyrox-prep-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,8 @@ const ASSETS = [
   './icon-512.png',
   './icon-512-maskable.png',
   './apple-touch-icon.png',
-  './favicon-64.png'
+  './favicon-64.png',
+  './display.woff2'
 ];
 
 self.addEventListener('install', e => {
