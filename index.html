@@ -299,9 +299,9 @@ input[type=text],input[type=date],input[type=number],select,.noteta{min-height:4
 .resbtn.has{color:var(--green);border-color:color-mix(in oklch,var(--green) 45%,var(--line));background:color-mix(in oklch,var(--green) 10%,transparent)}
 .resultwrap{display:none;margin-top:10px;border-top:1px dashed var(--line);padding-top:12px}
 .resultwrap.open{display:block}
-.resgrid{display:grid;gap:10px 12px}
-.resgrid label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;min-width:0;font-family:var(--font-display)}
-.resf{display:block;width:100%;box-sizing:border-box;min-height:48px;margin-top:5px;font-family:var(--font-display);font-size:21px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.resgrid{display:grid;gap:6px 10px;align-items:end}
+.rlab{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:var(--font-display)}
+.resf{width:100%;box-sizing:border-box;min-height:48px;font-family:var(--font-display);font-size:21px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
 .resf:not(:placeholder-shown){border-color:color-mix(in oklch,var(--accent) 50%,var(--line));color:var(--accent)}
 .resalt-l{display:block;margin-top:14px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .resalt{width:100%;min-height:62px;margin-top:6px;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;line-height:1.5;resize:vertical;outline:none}
@@ -351,6 +351,23 @@ button:active{transform:scale(.95)}
 .hazard{height:5px;border-radius:3px;background:repeating-linear-gradient(45deg,var(--accent) 0 9px,#0e0e10 9px 18px)}
 /* today card motivation line */
 .t-motiv{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:var(--accent2);margin-top:10px}
+/* ===== Workout Mode (focused full-screen logging) ===== */
+.wm{position:fixed;inset:0;background:var(--bg);z-index:45;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.wm.open{display:block}
+.wm-inner{max-width:620px;margin:0 auto;padding:20px 16px 44px}
+.wm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:2px}
+.wm-title{font-family:var(--font-display);font-weight:800;text-transform:uppercase;font-size:23px;line-height:1.05;letter-spacing:.01em}
+.wm-x{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:11px;width:42px;height:42px;font-size:16px;cursor:pointer;flex:0 0 auto}
+.wm-desc{color:var(--muted);font-size:13.5px;white-space:pre-line;margin:8px 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.wm-body .logex{padding:16px 0;border-bottom:1px solid var(--line)}
+.wm-body .logex:last-child{border-bottom:none}
+.wm-body .lx{font-size:16px}
+.wm-body .setgrid{gap:8px}
+.wm-body .setgrid input,.wm-body .resf{min-height:54px;font-size:23px}
+.wm-done{display:block;width:100%;margin-top:22px;border:none;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-family:var(--font-display);text-transform:uppercase;letter-spacing:.05em;font-weight:800;font-size:16px;padding:16px;cursor:pointer}
+.wm-done.on{background:var(--green);color:#0e0e10}
+.wbtn{background:transparent;color:var(--accent);border:1px solid var(--accent-line);border-radius:8px;padding:6px 12px;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.wbtn svg{width:14px;height:14px}
 </style>
 </head>
 <body>
@@ -543,6 +560,8 @@ button:active{transform:scale(.95)}
   </div>
 </section>
 </div>
+
+<div class="wm" id="workoutMode"><div class="wm-inner" id="wm-content"></div></div>
 
 <div class="modal" id="swapModal" onclick="if(event.target===this)closeSwap()">
   <div class="modalbox">
@@ -1025,9 +1044,9 @@ function openSwap(key,curName){ swapKey=key; swapName=curName; const gk=movement
   box.querySelectorAll('.swapsug').forEach(b=>b.addEventListener('click',()=>{ document.getElementById('swapInput').value=b.dataset.sub; }));
 }
 function closeSwap(){ document.getElementById('swapModal').classList.remove('open'); }
-function saveSwap(){ const v=document.getElementById('swapInput').value.trim(); if(v) S.swap[swapKey]=v; else delete S.swap[swapKey]; save(); closeSwap(); renderWeekView(); toast(v?'Swapped for this session ✓':'Swap cleared'); }
-function applyAllSwap(){ const v=document.getElementById('swapInput').value.trim(); const gk=movementKey(swapName); if(v){ S.swapGlobal[gk]=v; delete S.swap[swapKey]; } else { delete S.swapGlobal[gk]; } save(); closeSwap(); renderWeekView(); toast(v?'Swapped for every week ✓':'Swap cleared'); }
-function resetSwap(){ delete S.swap[swapKey]; if(S.swapGlobal) delete S.swapGlobal[movementKey(swapName)]; save(); closeSwap(); renderWeekView(); toast('Reset to original'); }
+function saveSwap(){ const v=document.getElementById('swapInput').value.trim(); if(v) S.swap[swapKey]=v; else delete S.swap[swapKey]; save(); closeSwap(); reRenderActive(); toast(v?'Swapped for this session ✓':'Swap cleared'); }
+function applyAllSwap(){ const v=document.getElementById('swapInput').value.trim(); const gk=movementKey(swapName); if(v){ S.swapGlobal[gk]=v; delete S.swap[swapKey]; } else { delete S.swapGlobal[gk]; } save(); closeSwap(); reRenderActive(); toast(v?'Swapped for every week ✓':'Swap cleared'); }
+function resetSwap(){ delete S.swap[swapKey]; if(S.swapGlobal) delete S.swapGlobal[movementKey(swapName)]; save(); closeSwap(); reRenderActive(); toast('Reset to original'); }
 /* session result */
 function resultHasData(id){ const r=S.result[id]; return !!(r&&(r.t||r.d||r.cal||r.rounds||r.rpe||r.alt)); }
 function renderResult(id,s){
@@ -1040,10 +1059,10 @@ function renderResult(id,s){
   else fields=[{f:'t',label:'Time',ph:'mm:ss',txt:1}];
   fields=fields.concat([{f:'rpe',label:'RPE',ph:'—',step:'0.5'}]);
   const pace=paceStr(parseFloat(r.d), parseTime(r.t||''));
-  const grid='<div class="resgrid" style="grid-template-columns:repeat('+fields.length+',minmax(0,1fr))">'+fields.map(f=>{
-    const attr=f.txt?'type="text" inputmode="numeric"':('type="number" inputmode="'+(f.step?'decimal':'numeric')+'"'+(f.step?' step="'+f.step+'"':''));
-    return '<label>'+f.label+'<input class="resf" '+attr+' data-res="'+id+'" data-rf="'+f.f+'" value="'+(r[f.f]||'')+'" placeholder="'+f.ph+'"></label>';
-  }).join('')+'</div>';
+  const grid='<div class="resgrid" style="grid-template-columns:repeat('+fields.length+',minmax(0,1fr))">'+
+    fields.map(f=>'<span class="rlab">'+f.label+'</span>').join('')+
+    fields.map(f=>{ const attr=f.txt?'type="text" inputmode="numeric"':('type="number" inputmode="'+(f.step?'decimal':'numeric')+'"'+(f.step?' step="'+f.step+'"':'')); return '<input class="resf" '+attr+' data-res="'+id+'" data-rf="'+f.f+'" value="'+(r[f.f]||'')+'" placeholder="'+f.ph+'">'; }).join('')+
+    '</div>';
   return '<div class="resultwrap'+(openResult.has(id)?' open':'')+'">'+grid+
     (pace?'<div class="muted" style="font-size:12px;margin-top:8px">Pace: <b class="accent">'+pace+'</b></div>':'')+
     '<label class="resalt-l">What you did / swapped in</label>'+
@@ -1070,9 +1089,9 @@ function pinDemo(){
   const url=document.getElementById('vidUrl').value.trim(), key=movementKey(demoMove);
   if(!url){ delete S.videos[key]; save(); openDemo(demoMove); return; }
   if(!ytEmbed(url)){ toast('Paste a valid YouTube link','err'); return; }
-  S.videos[key]=url; save(); openDemo(demoMove); renderWeekView(); toast('Demo pinned ✓');
+  S.videos[key]=url; save(); openDemo(demoMove); reRenderActive(); toast('Demo pinned ✓');
 }
-function unpinDemo(){ const key=movementKey(demoMove); delete S.videos[key]; save(); openDemo(demoMove); renderWeekView(); }
+function unpinDemo(){ const key=movementKey(demoMove); delete S.videos[key]; save(); openDemo(demoMove); reRenderActive(); }
 function renderDemoLib(){ const el=document.getElementById('demo-lib'); if(!el) return;
   el.innerHTML=DEMO_LIB.map(n=>'<button class="demobtn" data-demo="'+n+'" style="margin:0 8px 8px 0;padding:5px 11px">▶ '+n+'</button>').join('');
   el.querySelectorAll('.demobtn').forEach(b=>b.addEventListener('click',()=>openDemo(b.dataset.demo)));
@@ -1114,6 +1133,53 @@ function renderWeekView(){
   el.innerHTML=html;
   wireWeekView(el);
 }
+/* ============ Workout Mode ============ */
+let workoutCtx=null;
+function reRenderActive(){ if(workoutCtx) renderWorkout(); else renderWeekView(); }
+function openWorkout(w,i){ workoutCtx={w:+w,i:+i}; openResult.add('w'+w+'s'+i); document.body.style.overflow='hidden'; renderWorkout(); document.getElementById('workoutMode').classList.add('open'); window.scrollTo(0,0); }
+function closeWorkout(){ workoutCtx=null; document.body.style.overflow=''; document.getElementById('workoutMode').classList.remove('open'); renderWeekView(); renderWeekNav(); renderDash(); }
+function toggleWorkoutDone(){ if(!workoutCtx) return; const id='w'+workoutCtx.w+'s'+workoutCtx.i; S.done[id]=!S.done[id]; if(!S.done[id]) delete S.done[id]; save(); if(S.done[id]) celebrate('Session complete — nice work'); renderWorkout(); }
+function renderWorkout(){
+  if(!workoutCtx) return;
+  const wk=WEEKS.find(x=>x.w===workoutCtx.w); if(!wk) return; const s=wk.sess[workoutCtx.i]; const id='w'+wk.w+'s'+workoutCtx.i;
+  const isLift=/Strength|Stations|Openers|Primer/.test(s.t);
+  const items=isLift?loggableItems(s.x):[];
+  const body = items.length ? items.map((it,j)=>renderExercise(id,it,j,s.t,wk.deload)).join('') : renderResult(id,s);
+  const done=!!S.done[id];
+  document.getElementById('wm-content').innerHTML=
+    '<div class="wm-head"><div><div class="eyebrow" style="color:var(--accent2)">'+s.d+' · Week '+wk.w+(wk.deload?' · DELOAD':'')+'</div><div class="wm-title">'+s.t+'<br>'+s.n+'</div></div><button class="wm-x" onclick="closeWorkout()">✕</button></div>'+
+    '<div class="wm-desc">'+annotateDesc(s.x)+'</div>'+
+    '<div class="wm-body">'+body+'</div>'+
+    '<button class="wm-done'+(done?' on':'')+'" onclick="toggleWorkoutDone()">'+(done?'✓ Session complete':'Mark session complete')+'</button>';
+  wireWorkout(document.getElementById('wm-content'));
+}
+function wireWorkout(el){
+  el.querySelectorAll('.setgrid input').forEach(inp=>inp.addEventListener('change',()=>{
+    const key=inp.dataset.key, idx=+inp.dataset.idx, f=inp.dataset.f, tgt=+inp.dataset.tgt||1, v=inp.value.trim();
+    if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:Array.from({length:tgt},()=>({}))};
+    while(S.log[key].sets.length<=idx) S.log[key].sets.push({});
+    if(v) S.log[key].sets[idx][f]=v; else delete S.log[key].sets[idx][f];
+    if(!S.log[key].sets.some(setHasData)) delete S.log[key];
+    let isPR=false;
+    if(S.log[key]){ const e=exerciseE1RM(key); if(e){ if(inp.dataset.lift) isPR=recordE1RM(inp.dataset.lift,e)||isPR; else if(inp.dataset.mv) isPR=recordE1RM('~'+inp.dataset.mv,e,inp.dataset.mvname)||isPR; } }
+    save(); savedFlash();
+    if(isPR){ const e2=exerciseE1RM(key); celebrate((inp.dataset.mvname||((LIFTS.find(l=>l.k===inp.dataset.lift)||{}).n)||'New')+' PR — '+fmtKg(round2_5(e2))+' kg est.'); }
+    renderWorkout();
+  }));
+  el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{ const key=b.dataset.add, tgt=+b.dataset.tgt||1; if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:Array.from({length:tgt},()=>({}))}; S.log[key].sets.push({}); save(); renderWorkout(); }));
+  el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{ const key=b.dataset.del; if(!(S.log[key]&&S.log[key].sets)) return; const popped=S.log[key].sets.pop(), hadData=setHasData(popped); if(S.log[key].sets.length===0||!S.log[key].sets.some(setHasData)) delete S.log[key]; save(); renderWorkout(); if(hadData) toastUndo('Set removed',()=>{ if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:[]}; S.log[key].sets.push(popped); save(); renderWorkout(); }); }));
+  el.querySelectorAll('[data-setrm]').forEach(b=>b.addEventListener('click',()=>{ S.oneRM[b.dataset.setrm]=b.dataset.val; save(); renderWorkout(); renderLifts(); toast(((LIFTS.find(l=>l.k===b.dataset.setrm)||{}).n||'Lift')+' 1RM updated ✓'); }));
+  el.querySelectorAll('.demobtn').forEach(b=>b.addEventListener('click',()=>openDemo(b.dataset.demo)));
+  el.querySelectorAll('.swapbtn').forEach(b=>b.addEventListener('click',()=>openSwap(b.dataset.swap,b.dataset.swapname)));
+  el.querySelectorAll('.restbtn').forEach(b=>b.addEventListener('click',()=>startRest(+b.dataset.rest,b.dataset.restlabel)));
+  el.querySelectorAll('[data-res]').forEach(inp=>inp.addEventListener('input',()=>{
+    const rid=inp.dataset.res, rf=inp.dataset.rf, v=inp.value.trim();
+    if(!S.result[rid]) S.result[rid]={};
+    if(v) S.result[rid][rf]=v; else delete S.result[rid][rf];
+    if(!resultHasData(rid)) delete S.result[rid];
+    save();
+  }));
+}
 function renderSession(wk,s,i){
   const id='w'+wk.w+'s'+i, done=S.done[id]?' done':'';
   const isLift=/Strength|Stations|Openers|Primer/.test(s.t);
@@ -1136,7 +1202,7 @@ function renderSession(wk,s,i){
     (prep.prep?'<div class="prep-item"><b>Prep / agility</b><br>'+prep.prep+'</div>':'')+
     '<div class="prep-item"><b>Mobility</b><br>'+prep.mob+'</div></div>';
   return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
-    '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+resBtn+logger+resPanel+'<div class="sessfoot">'+prepBtn+noteBtn+'</div>'+prepBlock+notePv+noteWrap+'</div></div>';
+    '<div class="day">'+s.d+'</div><div style="flex:1"><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div>'+logBtn+resBtn+logger+resPanel+'<div class="sessfoot"><button class="wbtn" onclick="openWorkout('+wk.w+','+i+')">'+ic('play')+' Workout</button>'+prepBtn+noteBtn+'</div>'+prepBlock+notePv+noteWrap+'</div></div>';
 }
 function renderExercise(id,item,j,sType,isDeload){
   const key=id+'x'+j;
@@ -1246,7 +1312,7 @@ function renderDash(){
   // today card
   const ts=todaySession(), tdEl=document.getElementById('d-today');
   if(ts.wk && ts.s){ const sid='w'+ts.wk.w+'s'+ts.wk.sess.indexOf(ts.s), isDone=!!S.done[sid];
-    tdEl.innerHTML='<div class="eyebrow">Today · '+ts.wd+' · Week '+ts.wk.w+'</div><div class="t-sess">'+ts.s.t+' — '+ts.s.n+(isDone?' <span class="green">✓</span>':'')+'</div><div class="t-desc">'+annotateDesc(ts.s.x)+'</div><div class="t-motiv">'+['Trust the process — run 1 slow','Compromised running is the game','Own the roxzone','Every rep banks a second','Discipline on the easy days','Strong is a skill','The wall is a checkpoint'][new Date().getDate()%7]+'</div><button class="btn" style="margin-top:12px" onclick="jumpToToday()">Open &amp; log →</button>';
+    tdEl.innerHTML='<div class="eyebrow">Today · '+ts.wd+' · Week '+ts.wk.w+'</div><div class="t-sess">'+ts.s.t+' — '+ts.s.n+(isDone?' <span class="green">✓</span>':'')+'</div><div class="t-desc">'+annotateDesc(ts.s.x)+'</div><div class="t-motiv">'+['Trust the process — run 1 slow','Compromised running is the game','Own the roxzone','Every rep banks a second','Discipline on the easy days','Strong is a skill','The wall is a checkpoint'][new Date().getDate()%7]+'</div><button class="btn" style="margin-top:12px" onclick="openWorkout('+ts.wk.w+','+ts.wk.sess.indexOf(ts.s)+')">▶ Start workout</button>';
   } else if(ts.wk){
     tdEl.innerHTML='<div class="eyebrow">Today · '+ts.wd+'</div><div class="t-sess">Rest day</div><div class="t-desc">No session scheduled. Recover, hydrate, mobilise.</div><button class="btn ghost" style="margin-top:14px" onclick="jumpToToday()">Open this week →</button>';
   } else {
