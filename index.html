@@ -368,6 +368,14 @@ button:active{transform:scale(.95)}
 .wm-done.on{background:var(--green);color:#0e0e10}
 .wbtn{background:transparent;color:var(--accent);border:1px solid var(--accent-line);border-radius:8px;padding:6px 12px;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .wbtn svg{width:14px;height:14px}
+/* ===== Pause / resume ===== */
+.pauseban{background:linear-gradient(90deg,color-mix(in oklch,var(--blue) 18%,var(--card)),var(--card));border:1px solid color-mix(in oklch,var(--blue) 40%,var(--line));border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-bottom:14px}
+.pauseban .pdot{width:10px;height:10px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px color-mix(in oklch,var(--blue) 22%,transparent);flex:0 0 auto}
+.pauseban .ptx{flex:1;min-width:190px}
+.pauseban .p1{font-family:var(--font-display);font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:15px;color:var(--blue)}
+.pauseban .p2{color:var(--muted);font-size:12.5px;margin-top:2px}
+.pausenote{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.lnk{background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:12.5px;padding:0;font-family:inherit}
 </style>
 </head>
 <body>
@@ -389,6 +397,7 @@ button:active{transform:scale(.95)}
 
 <!-- ============ DASHBOARD ============ -->
 <section class="tab active" id="tab-dash">
+  <div id="d-pause"></div>
   <div class="card today" id="d-today"></div>
   <div class="grid g3" style="margin-top:14px">
     <div class="card"><div class="eyebrow">Countdown</div><div class="big accent" id="d-count">—</div><div class="muted" id="d-racedate"></div></div>
@@ -734,14 +743,17 @@ const METRICS = [
 ];
 
 /* =================== STATE =================== */
-let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}, result:{}, swap:{}, swapGlobal:{}, e1rmNames:{}};
+let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}, result:{}, swap:{}, swapGlobal:{}, e1rmNames:{}, pause:{active:false,days:0}};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
 
 /* =================== HELPERS =================== */
 function fmtDate(d){ return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
-function weekDates(w){ const a=new Date(PLAN_START); a.setDate(a.getDate()+(w-1)*7); const b=new Date(a); b.setDate(b.getDate()+6); return fmtDate(a)+' – '+fmtDate(b); }
-function currentWeek(){ const now=new Date(); now.setHours(0,0,0,0); const diff=Math.floor((now-PLAN_START)/(864e5)); if(diff<0) return 0; const w=Math.floor(diff/7)+1; return Math.min(w,14); }
+function pauseShiftDays(){ const p=S.pause||{}; let d=p.days||0; if(p.active&&p.since){ const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); d+=Math.max(0,Math.floor((t-s)/864e5)); } return d; }
+function effStart(){ const d=new Date(PLAN_START); d.setDate(d.getDate()+pauseShiftDays()); return d; }
+function effRace(){ const d=new Date(RACE_DATE); d.setDate(d.getDate()+pauseShiftDays()); return d; }
+function weekDates(w){ const a=effStart(); a.setDate(a.getDate()+(w-1)*7); const b=new Date(a); b.setDate(b.getDate()+6); return fmtDate(a)+' – '+fmtDate(b); }
+function currentWeek(){ const now=new Date(); now.setHours(0,0,0,0); const diff=Math.floor((now-effStart())/(864e5)); if(diff<0) return 0; const w=Math.floor(diff/7)+1; return Math.min(w,14); }
 
 /* =================== LIFTS & 1RM =================== */
 const LIFTS = [
@@ -930,13 +942,13 @@ function updateBadge(){
 function _p2(n){ return String(n).padStart(2,'0'); }
 function icsDT(d){ return d.getFullYear()+_p2(d.getMonth()+1)+_p2(d.getDate())+'T'+_p2(d.getHours())+_p2(d.getMinutes())+'00'; }
 function icsEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
-function sessionDate(w,dayName){ const off={Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6}[dayName]||0; const d=new Date(PLAN_START); d.setDate(d.getDate()+(w-1)*7+off); return d; }
+function sessionDate(w,dayName){ const off={Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6}[dayName]||0; const d=effStart(); d.setDate(d.getDate()+(w-1)*7+off); return d; }
 function buildICS(){
   let out='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//HYROX Prep//Raha//EN\r\nCALSCALE:GREGORIAN\r\n';
   const stamp=icsDT(new Date());
   WEEKS.forEach(wk=>wk.sess.forEach((s,i)=>{
     let d, summary;
-    if(s.d==='RACE'){ d=new Date(RACE_DATE); summary='🏁 HYROX RACE DAY'; d.setHours(8,0,0,0); }
+    if(s.d==='RACE'){ d=effRace(); summary='🏁 HYROX RACE DAY'; d.setHours(8,0,0,0); }
     else { d=sessionDate(wk.w,s.d); summary='HYROX W'+wk.w+': '+s.t+' — '+s.n; d.setHours(18,0,0,0); }
     const end=new Date(d); end.setHours(d.getHours()+1,15,0,0);
     out+='BEGIN:VEVENT\r\nUID:hyrox-w'+wk.w+'s'+i+'@raha\r\nDTSTAMP:'+stamp+'\r\nDTSTART:'+icsDT(d)+'\r\nDTEND:'+icsDT(end)+'\r\nSUMMARY:'+icsEsc(summary)+'\r\nDESCRIPTION:'+icsEsc((s.x||'').replace(/\n/g,' '))+'\r\nBEGIN:VALARM\r\nTRIGGER:-PT3H\r\nACTION:DISPLAY\r\nDESCRIPTION:'+icsEsc(summary)+'\r\nEND:VALARM\r\nEND:VEVENT\r\n';
@@ -1298,12 +1310,30 @@ function wireWeekView(el){
   }));
 }
 
+/* =================== PAUSE / RESUME =================== */
+function renderPause(){
+  const el=document.getElementById('d-pause'); if(!el) return;
+  const p=S.pause||{};
+  if(p.active){
+    const shown=p.since?new Date(p.since+'T00:00:00'):new Date();
+    el.innerHTML='<div class="pauseban"><span class="pdot"></span><div class="ptx"><div class="p1">Program paused</div><div class="p2">Since '+shown.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · Week '+currentWeek()+' held · countdown frozen. Do your own thing — nothing falls behind.</div></div><button class="btn" onclick="resumeProgram()">▶ Resume</button></div>';
+  } else if((p.days||0)>0){
+    el.innerHTML='<div class="pausenote">Timeline shifted <b>+'+p.days+' day'+(p.days===1?'':'s')+'</b> from pauses (race + all dates moved). <button class="lnk" onclick="pauseProgram()">Pause again</button> · <button class="lnk" onclick="resetPause()">Reset to original</button></div>';
+  } else {
+    el.innerHTML='<div class="pausenote"><button class="lnk" onclick="pauseProgram()">⏸ Pause program</button> — freezes the plan and countdown while you travel or take time off.</div>';
+  }
+}
+function pauseProgram(){ if(!S.pause) S.pause={active:false,days:0}; if(S.pause.active) return; const t=new Date(); t.setHours(0,0,0,0); S.pause.active=true; S.pause.since=t.toISOString().slice(0,10); save(); renderAll(); toast('Program paused — timeline frozen'); }
+function resumeProgram(){ const p=S.pause; if(!p||!p.active) return; const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); const off=Math.max(0,Math.floor((t-s)/864e5)); p.days=(p.days||0)+off; p.active=false; delete p.since; save(); renderAll(); const rd=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); toast(off?('Resumed · +'+off+' day'+(off===1?'':'s')+' · race now '+rd):'Resumed'); }
+function resetPause(){ S.pause={active:false,days:0}; save(); renderAll(); toast('Timeline reset to original dates'); }
+
 /* =================== DASHBOARD =================== */
 function renderDash(){
   const now=new Date(); now.setHours(0,0,0,0);
-  const days=Math.round((RACE_DATE-now)/864e5);
+  const days=Math.round((effRace()-now)/864e5);
   document.getElementById('d-count').innerHTML = days>0 ? days+'<small> days to go</small>' : (days===0?'RACE DAY 🏁':'DONE 🏁');
-  document.getElementById('d-racedate').textContent='Sat 26 Sep 2026';
+  document.getElementById('d-racedate').textContent=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+(pauseShiftDays()?' · +'+pauseShiftDays()+'d':'');
+  renderPause();
   const cw=currentWeek();
   const wk=WEEKS.find(w=>w.w===cw);
   document.getElementById('d-week').innerHTML = cw===0?'Pre-plan<small></small>': cw>13?'Race!<small></small>':cw+'<small> of 13</small>';
@@ -1421,7 +1451,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{},prefs:{},result:{},swap:{},swapGlobal:{},e1rmNames:{}},JSON.parse(r.result)); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{},prefs:{},result:{},swap:{},swapGlobal:{},e1rmNames:{},pause:{active:false,days:0}},JSON.parse(r.result)); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
   r.readAsText(f);
 }
 

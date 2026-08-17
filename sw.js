@@ -1,5 +1,5 @@
 /* HYROX Prep — service worker (offline app shell) */
-const CACHE = 'hyrox-prep-v13';
+const CACHE = 'hyrox-prep-v14';
 const ASSETS = [
   './',
   './index.html',
