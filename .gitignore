@@ -11,3 +11,6 @@ node_modules/
 *.zip
 *.apk
 *.aab
+
+# Test harness deps
+tests/node_modules/

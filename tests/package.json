@@ -1,0 +1,7 @@
+{
+  "name": "hyrox-app-tests",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": { "test": "node run.js" },
+  "devDependencies": { "playwright-core": "^1.47.0" }
+}

@@ -1,6 +1,7 @@
 # Netlify config for the HYROX Prep PWA (static site, no build step)
 [build]
   publish = "."
+  command = ""
 
 # Never let the CDN cache the service worker or the HTML shell, so app
 # updates reach installed devices immediately on the next launch.
