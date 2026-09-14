@@ -1,2 +1,13 @@
-# Local Netlify folder
-.netlify
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+
+# Build / tooling
+node_modules/
+.netlify/
+
+# Packaged app artifacts (kept out of the web repo)
+*.zip
+*.apk
+*.aab
