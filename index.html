@@ -1517,14 +1517,14 @@ function renderRewindSheet(){ const days=breakDays(), tier=breakAdvice(days).tie
   renderRewindFit(); }
 function pickRewind(i){ rewindPick=i; renderRewindSheet(); }
 function expandRewind(){ rewindExpanded=true; renderRewindSheet(); }
-function renderRewindFit(){ const o=rewindOptions()[rewindPick]; const el=document.getElementById('rw-fit'); if(!o||!el) return;
+function renderRewindFit(){ const o=rewindOptions()[rewindPick]; const el=document.getElementById('rw-fit'); if(!el) return; if(!o){ el.innerHTML=''; return; }
   const race=document.getElementById('rw-race').value; if(!race){ el.innerHTML=''; return; }
   if(daysBetween(todayISO(),race)<=0){ el.innerHTML='<span class="rw-fit-no">Pick a race date in the future.</span>'; return; }
   const need=weeksNeeded(o.targetWeek), have=weeksAvailable(race);
   if(have>=need){ el.innerHTML='<span class="rw-fit-ok">Fits — '+need+' week'+(need===1?'':'s')+' of plan, '+have+' available.</span>'; return; }
   const e=earliestFittingWeek(race), fix=raceISOForWeek(o.targetWeek);
   el.innerHTML='<span class="rw-fit-no">Needs '+need+' weeks, you have '+have+'.</span><br>→ Move race day to <b>'+fmtDate(parseISO(fix))+'</b> to fit, or<br>→ Rewind to <b>Week '+e+'</b> instead — the furthest back that still fits.'; }
-function confirmRewind(){ const o=rewindOptions()[rewindPick]; if(!o) return;
+function confirmRewind(){ const o=rewindOptions()[rewindPick]; if(!o){ toast('Pick what to restart first','err'); return; }
   const race=document.getElementById('rw-race').value;
   if(!race||daysBetween(todayISO(),race)<=0){ toast('Pick a race date in the future','err'); return; }
   doRewind({targetWeek:o.targetWeek, raceISO:race, discountPct:+document.getElementById('rw-disc').value||0,

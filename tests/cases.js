@@ -663,5 +663,20 @@ module.exports = [
       if (!/recommended/i.test(on.textContent)) return [false, 'preselected option is not the recommended one'];
       return [true, ''];
     }
+  },
+  {
+    name: 'collapsed state shows no fit verdict, even after a prior selection',
+    now: '2026-09-15',
+    state: { lastActive: '2026-08-05' },
+    fn: () => {
+      openRewind();                                  // 41 days: auto-selects, renders a verdict
+      if (!document.getElementById('rw-fit').innerHTML) return [false, 'precondition: expected a verdict at 41 days'];
+      closeRewind();
+      S.lastActive = '2026-09-03';                   // now 12 days off -> collapsed tier
+      openRewind();
+      const fit = document.getElementById('rw-fit').innerHTML;
+      if (fit) return [false, 'stale verdict survived into the collapsed state: ' + fit];
+      return [true, ''];
+    }
   }
 ];
