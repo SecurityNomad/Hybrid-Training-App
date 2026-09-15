@@ -1021,7 +1021,9 @@ const DEMO_LIB = ['SkiErg','Sled Push','Sled Pull','Burpee Broad Jump','Rowing',
 
 function epley(w,reps){ return w*(1+reps/30); }
 function prescReps(item){ const m=item.match(/\d+\s*[×x]\s*(\d+)/); return m?parseInt(m[1],10):''; }
-function prescWeight(item){ const L=detectLift(item); const m=item.match(/@\s*(\d+(?:\.\d+)?)/); if(L&&m&&S.oneRM[L.k]&&parseFloat(S.oneRM[L.k])>0) return round2_5(parseFloat(S.oneRM[L.k])*parseFloat(m[1])/100); return ''; }
+function discountFactor(){ const d=S.discount; if(!d||!d.pct) return 1; return currentWeek()<=d.throughWeek?1-d.pct/100:1; }
+function e1rmStale(){ return breakDays()>28; }
+function prescWeight(item){ const L=detectLift(item); const m=item.match(/@\s*(\d+(?:\.\d+)?)/); if(L&&m&&S.oneRM[L.k]&&parseFloat(S.oneRM[L.k])>0) return round2_5(parseFloat(S.oneRM[L.k])*parseFloat(m[1])/100*discountFactor()); return ''; }
 function movementName(item){ const m=item.match(/^(.*?)(?=\s\d+\s*[×x])/); let s=(m?m[1]:item).trim(); return s.replace(/[·:,+\-]+$/,'').trim(); }
 function movementKey(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
 function ytSearch(name){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent(name+' proper form technique'); }

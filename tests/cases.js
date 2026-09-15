@@ -368,5 +368,55 @@ module.exports = [
         return [false, 'range ' + JSON.stringify(S.history[0].weeks)];
       return [true, ''];
     }
+  },
+  {
+    name: 'discountFactor applies only while inside throughWeek',
+    now: '2026-09-14',
+    fn: () => {
+      S.discount = null;
+      if (discountFactor() !== 1) return [false, 'null -> ' + discountFactor()];
+      S.planStart = rewindAnchorISO(5);
+      S.discount = { pct: 10, throughWeek: 9 };
+      if (Math.abs(discountFactor() - 0.9) > 1e-9) return [false, 'week 5 -> ' + discountFactor()];
+      S.planStart = rewindAnchorISO(10);
+      if (discountFactor() !== 1) return [false, 'week 10 -> ' + discountFactor()];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'prescWeight applies the discount without touching stored 1RM',
+    now: '2026-09-14',
+    fn: () => {
+      S.oneRM = { squat: '140' };
+      S.discount = null; S.planStart = rewindAnchorISO(5);
+      const full = prescWeight('Back squat 4×6 @ 70%');
+      if (full !== 97.5) return [false, 'undiscounted ' + full]; // 140*0.70=98 -> 97.5
+      S.discount = { pct: 10, throughWeek: 9 };
+      const cut = prescWeight('Back squat 4×6 @ 70%');
+      if (cut !== 87.5) return [false, 'discounted ' + cut];     // 98*0.9=88.2 -> 87.5
+      if (S.oneRM.squat !== '140') return [false, 'stored 1RM mutated'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'prescWeight returns empty when no 1RM is set, discount or not',
+    now: '2026-09-14',
+    fn: () => {
+      S.oneRM = {}; S.discount = { pct: 10, throughWeek: 13 };
+      if (prescWeight('Back squat 4×6 @ 70%') !== '') return [false, 'expected empty'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'e1rmStale flips above 28 days off',
+    now: '2026-09-14',
+    state: { lastActive: '2026-08-20' },   // 25 days
+    fn: () => e1rmStale() ? [false, '25 days should not be stale'] : [true, '']
+  },
+  {
+    name: 'e1rmStale true after a long break',
+    now: '2026-09-14',
+    state: { lastActive: '2026-07-20' },   // 56 days
+    fn: () => e1rmStale() ? [true, ''] : [false, '56 days should be stale']
   }
 ];
