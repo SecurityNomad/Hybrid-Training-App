@@ -760,6 +760,10 @@ const METRICS = [
 /* =================== STATE =================== */
 let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}, result:{}, swap:{}, swapGlobal:{}, e1rmNames:{}, pause:{active:false,days:0}, lastActive:null, planStart:null, raceDate:null, raceAnchored:true, history:[], discount:null};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
+function migrateDates(){ if(S.planStart) return; const d=(S.pause&&S.pause.days)||0; if(d<=0) return;
+  const iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  S.planStart=iso(addDays(new Date(PLAN_START),d)); S.raceDate=iso(addDays(new Date(RACE_DATE),d)); S.pause.days=0; save(); }
+migrateDates();
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
 
 /* =================== DATES + BREAK GATE =================== */
@@ -778,8 +782,8 @@ function saveTrained(){ S.lastActive=todayISO(); save(); }
 /* =================== HELPERS =================== */
 function fmtDate(d){ return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
 function pauseShiftDays(){ const p=S.pause||{}; let d=p.days||0; if(p.active&&p.since){ const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); d+=Math.max(0,Math.floor((t-s)/864e5)); } return d; }
-function effStart(){ const d=new Date(PLAN_START); d.setDate(d.getDate()+pauseShiftDays()); return d; }
-function effRace(){ const d=new Date(RACE_DATE); d.setDate(d.getDate()+pauseShiftDays()); return d; }
+function effStart(){ const b=S.planStart?parseISO(S.planStart):new Date(PLAN_START); return addDays(b,pauseShiftDays()); }
+function effRace(){ const b=S.raceDate?parseISO(S.raceDate):new Date(RACE_DATE); return S.raceAnchored===false?addDays(b,pauseShiftDays()):new Date(b); }
 function weekDates(w){ const a=effStart(); a.setDate(a.getDate()+(w-1)*7); const b=new Date(a); b.setDate(b.getDate()+6); return fmtDate(a)+' – '+fmtDate(b); }
 function currentWeek(){ const now=new Date(); now.setHours(0,0,0,0); const diff=Math.floor((now-effStart())/(864e5)); if(diff<0) return 0; const w=Math.floor(diff/7)+1; return Math.min(w,14); }
 

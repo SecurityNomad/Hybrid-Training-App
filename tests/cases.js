@@ -69,5 +69,66 @@ module.exports = [
       if (raw.lastActive !== '2026-09-14') return [false, 'not persisted'];
       return [true, ''];
     }
+  },
+  {
+    name: 'effStart/effRace fall back to the built-ins when unset',
+    now: '2026-09-14',
+    fn: () => {
+      const s = effStart(), r = effRace();
+      if (s.getFullYear() !== 2026 || s.getMonth() !== 5 || s.getDate() !== 29)
+        return [false, 'effStart ' + s.toDateString()];
+      if (r.getFullYear() !== 2026 || r.getMonth() !== 8 || r.getDate() !== 26)
+        return [false, 'effRace ' + r.toDateString()];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'anchored pause does not move race day',
+    now: '2026-09-14',
+    state: { raceAnchored: true, pause: { active: true, days: 0, since: '2026-08-31' } },
+    fn: () => {
+      const r = effRace();
+      if (r.getMonth() !== 8 || r.getDate() !== 26) return [false, 'race moved to ' + r.toDateString()];
+      // plan start still slides, so the athlete is shown an earlier week
+      const s = effStart();
+      if (s.getDate() === 29 && s.getMonth() === 5) return [false, 'effStart did not shift'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'unanchored pause moves race day (legacy Model A)',
+    now: '2026-09-14',
+    state: { raceAnchored: false, pause: { active: false, days: 10 } },
+    fn: () => {
+      const r = effRace();
+      if (r.getMonth() !== 9 || r.getDate() !== 6) return [false, 'expected 6 Oct, got ' + r.toDateString()];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'migration: accumulated pause.days folds in, effective dates unchanged',
+    now: '2026-09-14',
+    state: { pause: { active: false, days: 10 } },
+    fn: () => {
+      // migrateDates ran at load. Dates must look exactly as legacy Model A showed them.
+      if (S.pause.days !== 0) return [false, 'pause.days not cleared: ' + S.pause.days];
+      if (S.planStart !== '2026-07-09') return [false, 'planStart ' + S.planStart];
+      if (S.raceDate !== '2026-10-06') return [false, 'raceDate ' + S.raceDate];
+      const s = effStart(), r = effRace();
+      if (s.getMonth() !== 6 || s.getDate() !== 9) return [false, 'effStart ' + s.toDateString()];
+      if (r.getMonth() !== 9 || r.getDate() !== 6) return [false, 'effRace ' + r.toDateString()];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'migration is idempotent and skips when planStart already set',
+    now: '2026-09-14',
+    state: { pause: { active: false, days: 10 }, planStart: '2026-07-01', raceDate: '2026-09-30' },
+    fn: () => {
+      if (S.planStart !== '2026-07-01') return [false, 'planStart overwritten: ' + S.planStart];
+      migrateDates(); migrateDates();
+      if (S.planStart !== '2026-07-01') return [false, 'not idempotent'];
+      return [true, ''];
+    }
   }
 ];
