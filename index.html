@@ -787,6 +787,15 @@ function effRace(){ const b=S.raceDate?parseISO(S.raceDate):new Date(RACE_DATE);
 function weekDates(w){ const a=effStart(); a.setDate(a.getDate()+(w-1)*7); const b=new Date(a); b.setDate(b.getDate()+6); return fmtDate(a)+' – '+fmtDate(b); }
 function currentWeek(){ const now=new Date(); now.setHours(0,0,0,0); const diff=Math.floor((now-effStart())/(864e5)); if(diff<0) return 0; const w=Math.floor(diff/7)+1; return Math.min(w,14); }
 
+/* =================== REWIND + FIT MATHS =================== */
+function blockRange(n){ const b=BLOCKS.find(x=>x.n===n); return b?[b.weeks[0],b.weeks[1]]:[1,13]; }
+function blockOfWeek(w){ const b=BLOCKS.find(x=>w>=x.weeks[0]&&w<=x.weeks[1]); return b?b.n:1; }
+function rewindAnchorISO(w){ const d=addDays(parseISO(todayISO()),-(w-1)*7); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function weeksNeeded(w){ return WEEKS.length-(w-1); }
+function weeksAvailable(raceISO){ return Math.floor(daysBetween(todayISO(),raceISO)/7); }
+function earliestFittingWeek(raceISO){ const a=weeksAvailable(raceISO); return Math.max(1,Math.min(WEEKS.length,WEEKS.length-a+1)); }
+function raceISOForWeek(w){ const d=addDays(parseISO(todayISO()),weeksNeeded(w)*7); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
 /* =================== LIFTS & 1RM =================== */
 const LIFTS = [
   {k:'squat',     n:'Back Squat',            aliases:['back squat','front squat','box squat','squat']},

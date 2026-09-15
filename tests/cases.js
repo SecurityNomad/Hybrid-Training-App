@@ -151,5 +151,78 @@ module.exports = [
         return [false, 'anchored race date wrong: ' + t2];
       return [true, ''];
     }
+  },
+  {
+    name: 'blockRange / blockOfWeek match the BLOCKS table',
+    now: '2026-09-14',
+    fn: () => {
+      const want = [[1,[1,4]],[2,[5,9]],[3,[10,13]]];
+      for (const [n, r] of want) {
+        const g = blockRange(n);
+        if (g[0] !== r[0] || g[1] !== r[1]) return [false, 'block ' + n + ' -> ' + JSON.stringify(g)];
+      }
+      for (const [w, b] of [[1,1],[4,1],[5,2],[9,2],[10,3],[13,3]])
+        if (blockOfWeek(w) !== b) return [false, 'week ' + w + ' -> block ' + blockOfWeek(w)];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'rewindAnchorISO makes currentWeek() return the target',
+    now: '2026-09-14',
+    fn: () => {
+      for (let w = 1; w <= 13; w++) {
+        S.planStart = rewindAnchorISO(w);
+        if (currentWeek() !== w) return [false, 'week ' + w + ' -> anchor ' + S.planStart + ' gives ' + currentWeek()];
+      }
+      return [true, ''];
+    }
+  },
+  {
+    name: 'rewindAnchorISO crosses a month boundary correctly',
+    now: '2026-10-02',
+    fn: () => {
+      // week 3 starting today means planStart is 14 days back: 18 Sep
+      if (rewindAnchorISO(3) !== '2026-09-18') return [false, 'got ' + rewindAnchorISO(3)];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'weeksNeeded counts target week through end of plan',
+    now: '2026-09-14',
+    fn: () => {
+      for (const [w, n] of [[1,13],[5,9],[8,6],[10,4],[13,1]])
+        if (weeksNeeded(w) !== n) return [false, 'week ' + w + ' -> ' + weeksNeeded(w) + ', expected ' + n];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'weeksAvailable and earliestFittingWeek against a near race date',
+    now: '2026-09-14',
+    fn: () => {
+      // 14 Nov 2026 is 61 days out -> 8 whole weeks
+      if (weeksAvailable('2026-11-14') !== 8) return [false, 'weeksAvailable ' + weeksAvailable('2026-11-14')];
+      // needs <= 8 weeks means targetWeek >= 6
+      if (earliestFittingWeek('2026-11-14') !== 6) return [false, 'earliest ' + earliestFittingWeek('2026-11-14')];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'raceISOForWeek returns a date that makes the rewind fit exactly',
+    now: '2026-09-14',
+    fn: () => {
+      const iso = raceISOForWeek(5);              // needs 9 weeks from today
+      if (weeksAvailable(iso) < weeksNeeded(5)) return [false, iso + ' does not fit'];
+      if (earliestFittingWeek(iso) > 5) return [false, 'earliest at ' + iso + ' is ' + earliestFittingWeek(iso)];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'earliestFittingWeek clamps to 13 when the race is imminent',
+    now: '2026-09-14',
+    fn: () => {
+      const e = earliestFittingWeek('2026-09-20');
+      if (e !== 13) return [false, 'got ' + e];
+      return [true, ''];
+    }
   }
 ];
