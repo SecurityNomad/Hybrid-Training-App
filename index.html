@@ -391,6 +391,13 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
 .sessfoot.show-more .moreitems{display:inline-flex;gap:8px;flex-wrap:wrap}
 .lasttime{font-size:11.5px;color:var(--muted);opacity:.85;margin:-2px 0 6px}
 .stale1rm{color:var(--muted);font-weight:400}
+/* ===== Task 9: rewind sheet ===== */
+.rw-opt{display:block;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:8px;cursor:pointer;color:var(--text)}
+.rw-opt.on{border-color:var(--accent);background:var(--accent-tint)}
+.rw-opt .rw-t{font-family:var(--font-display);font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:14px}
+.rw-opt .rw-s{color:var(--muted);font-size:12px;margin-top:2px}
+.rw-opt .rw-rec{color:var(--accent);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-left:6px}
+.rw-fit-ok{color:var(--green)} .rw-fit-no{color:var(--accent2)}
 </style>
 </head>
 <body>
@@ -596,6 +603,23 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
     <div class="pinrow"><input type="text" id="swapInput" placeholder="e.g. DB seated press"><button class="btn" onclick="saveSwap()">This session</button></div>
     <div class="modal-actions"><button class="btn ghost" onclick="applyAllSwap()">Apply to every week</button><button class="btn ghost" id="swapReset" style="display:none" onclick="resetSwap()">Reset</button><button class="btn ghost" onclick="closeSwap()">Close</button></div>
     <div class="muted" style="font-size:11.5px;margin-top:8px">Your sets, RPE and progression carry over to the swapped movement, so it keeps building week to week.</div>
+  </div>
+</div>
+
+<div class="modal" id="rewindModal" onclick="if(event.target===this)closeRewind()">
+  <div class="modalbox">
+    <div class="sheet-grab"></div>
+    <h3>Restart from an earlier week</h3>
+    <div id="rw-advice" class="muted" style="font-size:12.5px;margin-bottom:10px"></div>
+    <div id="rw-options"></div>
+    <label class="rlab" style="display:block;margin-top:14px">Race date</label>
+    <input type="date" id="rw-race" style="width:100%;margin-top:4px" onchange="renderRewindFit()">
+    <div id="rw-fit" style="font-size:12.5px;margin-top:8px"></div>
+    <label class="rlab" style="display:block;margin-top:14px">Comeback discount on prescribed loads</label>
+    <div class="row" style="margin-top:4px"><input type="number" id="rw-disc" min="0" max="30" step="5" style="width:90px"><span class="muted" style="font-size:12.5px">% off your stored 1RMs, until the block ends</span></div>
+    <label class="rlab" style="display:block;margin-top:14px">Why (optional)</label>
+    <input type="text" id="rw-reason" placeholder="e.g. illness — 3 weeks off" style="width:100%;margin-top:4px">
+    <div class="modal-actions"><button class="btn" onclick="confirmRewind()">Restart</button><button class="btn ghost" onclick="closeRewind()">Cancel</button></div>
   </div>
 </div>
 
@@ -1446,16 +1470,60 @@ function renderPause(){
     const msg=S.raceAnchored===false
       ? 'Since '+since+' · Week '+currentWeek()+' held · countdown frozen. Do your own thing — nothing falls behind.'
       : 'Since '+since+' — recording the break. Race day and the countdown are not affected; sessions you miss stay missed. Restart a block later to make up ground.';
-    el.innerHTML='<div class="pauseban"><span class="pdot"></span><div class="ptx"><div class="p1">Program paused</div><div class="p2">'+msg+'</div></div><button class="btn" onclick="resumeProgram()">▶ Resume</button></div>';
+    el.innerHTML='<div class="pauseban"><span class="pdot"></span><div class="ptx"><div class="p1">Program paused</div><div class="p2">'+msg+'</div><button class="lnk" style="margin-top:4px" onclick="openRewind()">↺ Restart from an earlier week</button></div><button class="btn" onclick="resumeProgram()">▶ Resume</button></div>';
   } else if((p.days||0)>0 && S.raceAnchored===false){
-    el.innerHTML='<div class="pausenote">Timeline shifted <b>+'+p.days+' day'+(p.days===1?'':'s')+'</b> from pauses (race + all dates moved). <button class="lnk" onclick="pauseProgram()">Pause again</button> · <button class="lnk" onclick="resetPause()">Reset to original</button></div>';
+    el.innerHTML='<div class="pausenote">Timeline shifted <b>+'+p.days+' day'+(p.days===1?'':'s')+'</b> from pauses (race + all dates moved). <button class="lnk" onclick="pauseProgram()">Pause again</button> · <button class="lnk" onclick="resetPause()">Reset to original</button> · <button class="lnk" onclick="openRewind()">↺ Restart from an earlier week</button></div>';
   } else {
-    el.innerHTML='<div class="pausenote"><button class="lnk" onclick="pauseProgram()">⏸ Pause program</button> — '+(S.raceAnchored===false?'freezes the plan and countdown while you travel or take time off.':'records time off without moving race day or the countdown.')+'</div>';
+    el.innerHTML='<div class="pausenote"><button class="lnk" onclick="pauseProgram()">⏸ Pause program</button> — '+(S.raceAnchored===false?'freezes the plan and countdown while you travel or take time off.':'records time off without moving race day or the countdown.')+' <button class="lnk" onclick="openRewind()">↺ Restart from an earlier week</button></div>';
   }
 }
 function pauseProgram(){ if(!S.pause) S.pause={active:false,days:0}; if(S.pause.active) return; const t=new Date(); t.setHours(0,0,0,0); S.pause.active=true; S.pause.since=t.toISOString().slice(0,10); save(); renderAll(); toast(S.raceAnchored===false?'Program paused — timeline frozen':'Program paused — recording the break'); }
 function resumeProgram(){ const p=S.pause; if(!p||!p.active) return; const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); const off=Math.max(0,Math.floor((t-s)/864e5)); p.days=(p.days||0)+off; p.active=false; delete p.since; save(); renderAll(); const rd=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); toast(off?('Resumed · +'+off+' day'+(off===1?'':'s')+(S.raceAnchored===false?' · race now '+rd:'')):'Resumed'); }
 function resetPause(){ S.pause={active:false,days:0}; save(); renderAll(); toast('Timeline reset to original dates'); }
+
+/* =================== REWIND SHEET =================== */
+let rewindPick=null;
+function rewindOptions(){ const cw=currentWeek()||1, days=breakDays(), tier=breakAdvice(days).tier, out=[];
+  out.push({targetWeek:cw, blockN:null, single:true, label:'Repeat Week '+cw, sub:'Redo this week only', recommended:tier==='week'});
+  BLOCKS.forEach(b=>{ const first=b.weeks[0]; if(first>cw) return;
+    const sess=WEEKS.filter(w=>w.w>=first&&w.w<=b.weeks[1]).reduce((n,w)=>n+w.sess.length,0);
+    const doneN=Object.keys(S.done||{}).filter(k=>{const w=weekOfKey(k); return w!==null&&w>=first&&w<=b.weeks[1];}).length;
+    const isCur=blockOfWeek(cw)===b.n;
+    out.push({targetWeek:first, blockN:b.n, single:false, label:'Restart Block '+b.n+' — '+b.name,
+      sub:'Week '+first+' onward · '+doneN+' of '+sess+' sessions logged',
+      recommended:(tier==='block'&&isCur)||(tier==='plan'&&b.n===1)}); });
+  return out.filter(o=>o.targetWeek<=cw); }
+function openRewind(){ rewindPick=null; const m=document.getElementById('rewindModal');
+  const r=effRace(); document.getElementById('rw-race').value=r.getFullYear()+'-'+String(r.getMonth()+1).padStart(2,'0')+'-'+String(r.getDate()).padStart(2,'0');
+  document.getElementById('rw-disc').value=breakAdvice(breakDays()).discountPct;
+  document.getElementById('rw-reason').value='';
+  renderRewindSheet(); sheetIn(m); }
+function closeRewind(){ sheetOut(document.getElementById('rewindModal')); }
+function renderRewindSheet(){ const days=breakDays(), tier=breakAdvice(days).tier, opts=rewindOptions();
+  const adv=document.getElementById('rw-advice');
+  adv.innerHTML = days===0 ? 'No training history yet — pick any starting point.'
+    : tier==='none' ? '<b>'+days+' days off won\'t have cost you.</b> Picking up where you left off is the better call. Restart anyway if you want to.'
+    : days+' days since your last logged session. '+(tier==='week'?'Repeating this week is usually enough.':tier==='block'?'Restarting the current block is the sensible reset.':'After this long, starting again from Block 1 is the honest option.');
+  if(rewindPick===null){ const r=opts.findIndex(o=>o.recommended); rewindPick=r>=0?r:0; }
+  document.getElementById('rw-options').innerHTML=opts.map((o,i)=>
+    '<button class="rw-opt'+(i===rewindPick?' on':'')+'" data-i="'+i+'" data-single="'+(o.single?1:0)+'" onclick="pickRewind('+i+')">'+
+    '<div class="rw-t">'+escapeHtml(o.label)+(o.recommended?'<span class="rw-rec">Recommended</span>':'')+'</div>'+
+    '<div class="rw-s">'+escapeHtml(o.sub)+'</div></button>').join('');
+  renderRewindFit(); }
+function pickRewind(i){ rewindPick=i; renderRewindSheet(); }
+function renderRewindFit(){ const o=rewindOptions()[rewindPick]; const el=document.getElementById('rw-fit'); if(!o||!el) return;
+  const race=document.getElementById('rw-race').value; if(!race){ el.innerHTML=''; return; }
+  if(daysBetween(todayISO(),race)<=0){ el.innerHTML='<span class="rw-fit-no">Pick a race date in the future.</span>'; return; }
+  const need=weeksNeeded(o.targetWeek), have=weeksAvailable(race);
+  if(have>=need){ el.innerHTML='<span class="rw-fit-ok">Fits — '+need+' week'+(need===1?'':'s')+' of plan, '+have+' available.</span>'; return; }
+  const e=earliestFittingWeek(race), fix=raceISOForWeek(o.targetWeek);
+  el.innerHTML='<span class="rw-fit-no">Needs '+need+' weeks, you have '+have+'.</span><br>→ Move race day to <b>'+fmtDate(parseISO(fix))+'</b> to fit, or<br>→ Rewind to <b>Week '+e+'</b> instead — the furthest back that still fits.'; }
+function confirmRewind(){ const o=rewindOptions()[rewindPick]; if(!o) return;
+  const race=document.getElementById('rw-race').value;
+  if(!race||daysBetween(todayISO(),race)<=0){ toast('Pick a race date in the future','err'); return; }
+  doRewind({targetWeek:o.targetWeek, raceISO:race, discountPct:+document.getElementById('rw-disc').value||0,
+    reason:document.getElementById('rw-reason').value.trim(), blockN:o.blockN, single:o.single});
+  closeRewind(); renderAll(); toast(o.single?'Repeating Week '+o.targetWeek:'Block '+o.blockN+' restarted'); }
 
 /* =================== DASHBOARD =================== */
 function renderDash(){
@@ -1631,7 +1699,7 @@ function renderPctTable(){
 function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); renderLifts(); renderDemoLib(); renderE1rmCharts(); renderRpeChart(); renderReminders(); }
 initBench(); renderAll(); try{ updateBadge(); }catch(e){}
 /* Task 5: drag-to-dismiss sheets + swipe between exercises */
-['swapModal','vidModal'].forEach(id=>{ const m=document.getElementById(id); if(!m) return; const g=m.querySelector('.sheet-grab'), b=m.querySelector('.modalbox'); if(g&&b) attachDismissDrag(g,b,m,()=>{ m.classList.remove('open'); m.style.opacity=''; b.style.transform=''; }); });
+['swapModal','vidModal','rewindModal'].forEach(id=>{ const m=document.getElementById(id); if(!m) return; const g=m.querySelector('.sheet-grab'), b=m.querySelector('.modalbox'); if(g&&b) attachDismissDrag(g,b,m,()=>{ m.classList.remove('open'); m.style.opacity=''; b.style.transform=''; }); });
 /* swipe-between-exercises is now handled by the 1:1 pager (attachPager) inside renderWorkout */
 </script>
 <script>

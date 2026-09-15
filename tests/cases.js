@@ -545,5 +545,93 @@ module.exports = [
       if (staleMark() !== '') return [false, 'marker shown when not stale: ' + staleMark()];
       return [true, ''];
     }
+  },
+  {
+    name: 'earliestFittingWeek clamps to 1 when the race is far away',
+    now: '2026-09-15',
+    fn: () => {
+      const e = earliestFittingWeek('2027-09-15');
+      if (e !== 1) return [false, 'got ' + e + ', expected 1'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'rewindOptions: 12 days off recommends nothing',
+    now: '2026-09-14',
+    state: { lastActive: '2026-09-02' },
+    fn: () => {
+      const o = rewindOptions();
+      if (o.some(x => x.recommended)) return [false, 'recommended something at 12 days'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'rewindOptions: 40 days off recommends the current block',
+    now: '2026-09-14',
+    state: { lastActive: '2026-08-05' },
+    fn: () => {
+      const rec = rewindOptions().filter(x => x.recommended);
+      if (rec.length !== 1) return [false, rec.length + ' recommended'];
+      if (rec[0].single) return [false, 'recommended a single week, expected a block'];
+      if (rec[0].targetWeek !== blockRange(blockOfWeek(currentWeek()))[0])
+        return [false, 'target ' + rec[0].targetWeek];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'rewindOptions: 20 days off recommends repeating the current week',
+    now: '2026-09-14',
+    state: { lastActive: '2026-08-25' },
+    fn: () => {
+      const rec = rewindOptions().filter(x => x.recommended);
+      if (rec.length !== 1 || !rec[0].single) return [false, JSON.stringify(rec)];
+      if (rec[0].targetWeek !== currentWeek()) return [false, 'target ' + rec[0].targetWeek];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'rewindOptions never offers a week ahead of the current one',
+    now: '2026-09-14',
+    state: { lastActive: '2026-06-01' },
+    fn: () => {
+      const cw = currentWeek();
+      const bad = rewindOptions().filter(o => o.targetWeek > cw);
+      if (bad.length) return [false, 'offered ' + JSON.stringify(bad.map(b => b.targetWeek)) + ' ahead of ' + cw];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'the sheet opens from the dashboard and lists options',
+    now: '2026-09-14',
+    state: { lastActive: '2026-08-05' },
+    fn: () => {
+      openRewind();
+      const m = document.getElementById('rewindModal');
+      if (!m || !m.classList.contains('open')) return [false, 'sheet did not open'];
+      if (!document.querySelectorAll('#rw-options .rw-opt').length) return [false, 'no options rendered'];
+      if (!document.getElementById('rw-race')) return [false, 'no race date input'];
+      if (!document.getElementById('rw-fit')) return [false, 'no fit verdict'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'confirming the sheet performs the rewind end to end',
+    now: '2026-09-14',
+    // 40 days off -> the recommended option is the current block (week 12 sits in Block 3, weeks 10-13)
+    state: { lastActive: '2026-08-05', done: { w9s0: true, w10s0: true, w11s0: true } },
+    fn: () => {
+      openRewind();
+      const opt = document.querySelector('#rw-options .rw-opt.on');
+      if (!opt) return [false, 'no option preselected'];
+      if (opt.dataset.single !== '0') return [false, 'recommended option was a single week'];
+      document.getElementById('rw-race').value = '2026-12-19';
+      confirmRewind();
+      if (!S.history.length) return [false, 'nothing archived'];
+      if (S.raceDate !== '2026-12-19') return [false, 'raceDate ' + S.raceDate];
+      if (S.done.w10s0 || S.done.w11s0) return [false, 'in-range done not cleared'];
+      if (!S.done.w9s0) return [false, 'week 9 is outside Block 3 and must survive'];
+      if (currentWeek() !== 10) return [false, 'currentWeek ' + currentWeek()];
+      return [true, ''];
+    }
   }
 ];
