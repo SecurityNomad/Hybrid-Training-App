@@ -811,6 +811,18 @@ function archiveRange(first,last,meta){ meta=meta||{};
     done:pick(S.done), log:pick(S.log), notes:pick(S.notes), result:pick(S.result), bestE1RM:bestE1RMFor(first,last)};
   if(!Array.isArray(S.history)) S.history=[]; S.history.push(rec); return rec; }
 function clearRange(first,last){ [['done',S.done],['log',S.log],['notes',S.notes],['result',S.result]].forEach(([,m])=>{ keysInRange(m,first,last).forEach(k=>delete m[k]); }); }
+function doRewind(o){ const t=Math.max(1,Math.min(WEEKS.length,+o.targetWeek||1));
+  const single=!!o.single, bn=single?null:(o.blockN||blockOfWeek(t));
+  const range=single?[t,t]:blockRange(bn); const first=single?t:Math.min(range[0],t), last=range[1];
+  const rec=archiveRange(first,last,{block:bn,breakDays:breakDays(),reason:o.reason||''});
+  clearRange(first,last);
+  S.planStart=rewindAnchorISO(t);
+  if(o.raceISO) S.raceDate=o.raceISO;
+  S.pause={active:false,days:0};
+  const pct=+o.discountPct||0;
+  S.discount=pct>0?{pct:pct,throughWeek:last}:null;
+  S.lastActive=todayISO();
+  save(); return rec; }
 
 /* =================== LIFTS & 1RM =================== */
 const LIFTS = [

@@ -321,5 +321,52 @@ module.exports = [
         if (weekOfKey(k) !== w) return [false, k + ' -> ' + weekOfKey(k) + ', expected ' + w];
       return [true, ''];
     }
+  },
+  {
+    name: 'doRewind archives, clears, re-anchors and sets the discount in one go',
+    now: '2026-09-14',
+    state: { lastActive: '2026-08-11',
+             done: { w5s0: true, w6s0: true, w4s0: true },
+             log: { w5s0x0: { sets: [{ w: '100', reps: '5' }] } },
+             pause: { active: false, days: 3 } },
+    fn: () => {
+      const rec = doRewind({ targetWeek: 5, raceISO: '2026-12-05', discountPct: 10, reason: 'illness', blockN: 2 });
+      if (currentWeek() !== 5) return [false, 'currentWeek ' + currentWeek()];
+      if (S.done.w5s0 || S.done.w6s0) return [false, 'in-range done not cleared'];
+      if (!S.done.w4s0) return [false, 'out-of-range done was cleared'];
+      if (S.log.w5s0x0) return [false, 'in-range log not cleared'];
+      if (S.history.length !== 1 || !S.history[0].done.w5s0) return [false, 'not archived'];
+      if (S.raceDate !== '2026-12-05') return [false, 'raceDate ' + S.raceDate];
+      if (!S.discount || S.discount.pct !== 10 || S.discount.throughWeek !== 9)
+        return [false, 'discount ' + JSON.stringify(S.discount)];
+      if (S.pause.active !== false || S.pause.days !== 0) return [false, 'pause not consumed'];
+      if (S.history[0].breakDays !== 34) return [false, 'breakDays ' + S.history[0].breakDays];
+      const raw = JSON.parse(localStorage.getItem('hyrox_dash_raha_v1'));
+      if (!raw.history || raw.history.length !== 1) return [false, 'not persisted'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'doRewind with discountPct 0 stores no discount',
+    now: '2026-09-14',
+    fn: () => {
+      doRewind({ targetWeek: 8, raceISO: '2026-11-21', discountPct: 0, reason: '', blockN: 2 });
+      if (S.discount !== null) return [false, 'discount ' + JSON.stringify(S.discount)];
+      if (currentWeek() !== 8) return [false, 'currentWeek ' + currentWeek()];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'doRewind to a single week uses that week as its own range',
+    now: '2026-09-14',
+    state: { done: { w7s0: true, w8s0: true } },
+    fn: () => {
+      doRewind({ targetWeek: 8, raceISO: '2026-11-21', discountPct: 5, reason: '', blockN: null, single: true });
+      if (S.done.w8s0) return [false, 'week 8 not cleared'];
+      if (!S.done.w7s0) return [false, 'week 7 wrongly cleared'];
+      if (S.history[0].weeks[0] !== 8 || S.history[0].weeks[1] !== 8)
+        return [false, 'range ' + JSON.stringify(S.history[0].weeks)];
+      return [true, ''];
+    }
   }
 ];
