@@ -389,6 +389,8 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
 .moretoggle{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:14px;line-height:1;font-weight:700;cursor:pointer;letter-spacing:.06em}
 .sessfoot .moreitems{display:none}
 .sessfoot.show-more .moreitems{display:inline-flex;gap:8px;flex-wrap:wrap}
+.lasttime{font-size:11.5px;color:var(--muted);opacity:.85;margin:-2px 0 6px}
+.stale1rm{color:var(--muted);font-weight:400}
 </style>
 </head>
 <body>
@@ -811,6 +813,14 @@ function archiveRange(first,last,meta){ meta=meta||{};
     done:pick(S.done), log:pick(S.log), notes:pick(S.notes), result:pick(S.result), bestE1RM:bestE1RMFor(first,last)};
   if(!Array.isArray(S.history)) S.history=[]; S.history.push(rec); return rec; }
 function clearRange(first,last){ [['done',S.done],['log',S.log],['notes',S.notes],['result',S.result]].forEach(([,m])=>{ keysInRange(m,first,last).forEach(k=>delete m[k]); }); }
+function lastAttemptLine(key){ const h=(S.history||[]).filter(x=>x.log&&x.log[key]); if(!h.length) return '';
+  const sets=h[h.length-1].log[key].sets||[]; let best=null,bv=-1;
+  sets.forEach(s=>{ const w=parseFloat(s.w)||0, r=parseFloat(s.reps)||0; const v=w>0?w*(1+r/30):r; if(v>bv){bv=v;best=s;} });
+  if(!best) return '';
+  const bits=[]; if(best.w) bits.push(best.w+'kg'); if(best.reps) bits.push('× '+best.reps); if(best.rpe) bits.push('@ RPE '+best.rpe);
+  if(!bits.length) return '';
+  return '<div class="lasttime">Last time: '+escapeHtml(bits.join(' '))+'</div>'; }
+function staleMark(){ return e1rmStale()?'<span class="stale1rm"> (stale 1RM)</span>':''; }
 function doRewind(o){ const t=Math.max(1,Math.min(WEEKS.length,+o.targetWeek||1));
   const single=!!o.single, bn=single?null:(o.blockN||blockOfWeek(t));
   const range=single?[t,t]:blockRange(bn); const first=single?t:Math.min(range[0],t), last=range[1];
@@ -1366,7 +1376,7 @@ function renderExercise(id,item,j,sType,isDeload){
   const prog=progHTML(key);
   const rpeT=targetRPE(item,sType,isDeload);
   const measTxt = meas ? tgtSets+' × '+meas.per+(meas.unit?meas.unit:(dom.type==='wr'||dom.type==='reps'?' reps':'')) : tgtSets+' × '+(tgtReps||'—');
-  const tgtLine='<div class="setrow-target">Target: '+measTxt+(dom.type==='wr'&&pw!==''?' @ ~'+fmtKg(pw)+' kg':'')+' · <span class="rpe-tgt">RPE '+rpeT+'</span></div>';
+  const tgtLine='<div class="setrow-target">Target: '+measTxt+(dom.type==='wr'&&pw!==''?' @ ~'+fmtKg(pw)+' kg'+staleMark():'')+' · <span class="rpe-tgt">RPE '+rpeT+'</span></div>'+lastAttemptLine(key);
   const nameLine = swapped ? '<span class="swapped">'+escapeHtml(swapped)+'</span> <span class="muted" style="font-size:11px">↔ '+escapeHtml(rawName)+'</span>' : annotateDesc(item);
   return '<div class="logex"><div class="lx">'+nameLine+' <button class="demobtn" title="Form demo" data-demo="'+name.replace(/"/g,'')+'">'+ic('play')+'</button> <button class="swapbtn" title="Swap exercise" data-swap="'+key+'" data-swapname="'+rawName.replace(/"/g,'')+'">'+ic('swap')+'</button></div>'+tgtLine+rows+controls+'<div class="progslot" data-progfor="'+key+'">'+prog+'</div></div>';
 }

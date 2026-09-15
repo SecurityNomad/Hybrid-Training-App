@@ -418,5 +418,58 @@ module.exports = [
     now: '2026-09-14',
     state: { lastActive: '2026-07-20' },   // 56 days
     fn: () => e1rmStale() ? [true, ''] : [false, '56 days should be stale']
+  },
+  {
+    name: 'lastAttemptLine formats the best archived set',
+    now: '2026-09-14',
+    state: { history: [ { weeks: [5,9], block: 2, attempt: 1, archivedOn: '2026-08-01',
+      log: { w5s0x0: { sets: [{ w: '100', reps: '6', rpe: '8' }, { w: '95', reps: '6', rpe: '7' }] } },
+      done: {}, notes: {}, result: {}, bestE1RM: {} } ] },
+    fn: () => {
+      const h = lastAttemptLine('w5s0x0');
+      if (!h) return [false, 'empty'];
+      if (h.indexOf('100') < 0 || h.indexOf('6') < 0 || h.indexOf('8') < 0)
+        return [false, 'missing values: ' + h];
+      if (h.indexOf('Last time') < 0) return [false, 'missing label: ' + h];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'lastAttemptLine is empty with no archive, and for keys outside it',
+    now: '2026-09-14',
+    state: { history: [ { weeks: [5,9], block: 2, attempt: 1, archivedOn: '2026-08-01',
+      log: { w5s0x0: { sets: [{ w: '100', reps: '6' }] } }, done: {}, notes: {}, result: {}, bestE1RM: {} } ] },
+    fn: () => {
+      if (lastAttemptLine('w9s2x1') !== '') return [false, 'unarchived key returned a line'];
+      S.history = [];
+      if (lastAttemptLine('w5s0x0') !== '') return [false, 'empty history returned a line'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'lastAttemptLine reads the most recent archive when a block was redone twice',
+    now: '2026-09-14',
+    state: { history: [
+      { weeks: [5,9], block: 2, attempt: 1, archivedOn: '2026-06-01',
+        log: { w5s0x0: { sets: [{ w: '90', reps: '6' }] } }, done: {}, notes: {}, result: {}, bestE1RM: {} },
+      { weeks: [5,9], block: 2, attempt: 2, archivedOn: '2026-08-01',
+        log: { w5s0x0: { sets: [{ w: '105', reps: '6' }] } }, done: {}, notes: {}, result: {}, bestE1RM: {} } ] },
+    fn: () => {
+      const h = lastAttemptLine('w5s0x0');
+      if (h.indexOf('105') < 0) return [false, 'did not use the latest attempt: ' + h];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'stale 1RM marker shows only when a prescribed weight is displayed',
+    now: '2026-09-15',
+    state: { lastActive: '2026-06-01', oneRM: { squat: '140' } },
+    fn: () => {
+      if (!e1rmStale()) return [false, 'precondition: should be stale after ~3 months'];
+      if (staleMark().indexOf('stale 1RM') < 0) return [false, 'marker missing when stale'];
+      S.lastActive = todayISO();
+      if (staleMark() !== '') return [false, 'marker shown when not stale: ' + staleMark()];
+      return [true, ''];
+    }
   }
 ];
