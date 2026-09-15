@@ -797,7 +797,7 @@ function earliestFittingWeek(raceISO){ const a=weeksAvailable(raceISO); return M
 function raceISOForWeek(w){ const d=addDays(parseISO(todayISO()),weeksNeeded(w)*7); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
 /* =================== ARCHIVE =================== */
-function weekOfKey(k){ const m=String(k).match(/^w(\d+)s\d+/); return m?+m[1]:null; }
+function weekOfKey(k){ const m=String(k).match(/^w(\d+)s(\d+)(?:x(\d+))?$/); return m?+m[1]:null; }
 function keysInRange(map,first,last){ return Object.keys(map||{}).filter(k=>{ const w=weekOfKey(k); return w!==null&&w>=first&&w<=last; }); }
 function attemptNumber(n){ return (S.history||[]).filter(h=>h.block===n).length+1; }
 function bestE1RMFor(first,last){ const out={};
@@ -805,7 +805,7 @@ function bestE1RMFor(first,last){ const out={};
     if(!out[id]||e>out[id]) out[id]=Math.round(e*10)/10; });
   return out; }
 function archiveRange(first,last,meta){ meta=meta||{};
-  const pick=m=>{ const o={}; keysInRange(m,first,last).forEach(k=>o[k]=m[k]); return o; };
+  const pick=m=>{ const o={}; keysInRange(m,first,last).forEach(k=>o[k]=m[k]); return JSON.parse(JSON.stringify(o)); };
   const rec={weeks:[first,last], block:(meta.block===undefined?null:meta.block), attempt:attemptNumber(meta.block===undefined?null:meta.block),
     archivedOn:todayISO(), breakDays:meta.breakDays||0, reason:meta.reason||'',
     done:pick(S.done), log:pick(S.log), notes:pick(S.notes), result:pick(S.result), bestE1RM:bestE1RMFor(first,last)};

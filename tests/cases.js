@@ -298,5 +298,28 @@ module.exports = [
       if (Math.abs(vals[0] - 121) > 0.2) return [false, 'got ' + JSON.stringify(best)];
       return [true, ''];
     }
+  },
+  {
+    name: 'archiveRange freezes a deep copy — later live edits cannot reach it',
+    now: '2026-09-15',
+    state: { log: { w5s0x0: { sets: [{ w: '100', reps: '5' }] } } },
+    fn: () => {
+      const rec = archiveRange(5, 9, { block: 2 });
+      S.log.w5s0x0.sets[0].w = '999';               // mutate the live object in place
+      if (rec.log.w5s0x0.sets[0].w !== '100')
+        return [false, 'archive was aliased, saw ' + rec.log.w5s0x0.sets[0].w];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'weekOfKey rejects anything that is not a plan key',
+    now: '2026-09-15',
+    fn: () => {
+      for (const k of ['w5s0x2x3', 'w5sBOGUS0', 'w5', 'x5s0', '', 'nonsense', 'w5session0'])
+        if (weekOfKey(k) !== null) return [false, k + ' -> ' + weekOfKey(k) + ', expected null'];
+      for (const [k, w] of [['w5s0', 5], ['w12s3x2', 12], ['w1s0x0', 1]])
+        if (weekOfKey(k) !== w) return [false, k + ' -> ' + weekOfKey(k) + ', expected ' + w];
+      return [true, ''];
+    }
   }
 ];
