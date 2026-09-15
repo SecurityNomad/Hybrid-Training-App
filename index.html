@@ -784,7 +784,7 @@ function saveTrained(){ S.lastActive=todayISO(); save(); }
 /* =================== HELPERS =================== */
 function fmtDate(d){ return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
 function pauseShiftDays(){ const p=S.pause||{}; let d=p.days||0; if(p.active&&p.since){ const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); d+=Math.max(0,Math.floor((t-s)/864e5)); } return d; }
-function effStart(){ const b=S.planStart?parseISO(S.planStart):new Date(PLAN_START); return addDays(b,pauseShiftDays()); }
+function effStart(){ const b=S.planStart?parseISO(S.planStart):new Date(PLAN_START); return S.raceAnchored===false?addDays(b,pauseShiftDays()):new Date(b); }
 function effRace(){ const b=S.raceDate?parseISO(S.raceDate):new Date(RACE_DATE); return S.raceAnchored===false?addDays(b,pauseShiftDays()):new Date(b); }
 function weekDates(w){ const a=effStart(); a.setDate(a.getDate()+(w-1)*7); const b=new Date(a); b.setDate(b.getDate()+6); return fmtDate(a)+' – '+fmtDate(b); }
 function currentWeek(){ const now=new Date(); now.setHours(0,0,0,0); const diff=Math.floor((now-effStart())/(864e5)); if(diff<0) return 0; const w=Math.floor(diff/7)+1; return Math.min(w,14); }
@@ -1442,15 +1442,19 @@ function renderPause(){
   const p=S.pause||{};
   if(p.active){
     const shown=p.since?new Date(p.since+'T00:00:00'):new Date();
-    el.innerHTML='<div class="pauseban"><span class="pdot"></span><div class="ptx"><div class="p1">Program paused</div><div class="p2">Since '+shown.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · Week '+currentWeek()+' held · countdown frozen. Do your own thing — nothing falls behind.</div></div><button class="btn" onclick="resumeProgram()">▶ Resume</button></div>';
-  } else if((p.days||0)>0){
+    const since=shown.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    const msg=S.raceAnchored===false
+      ? 'Since '+since+' · Week '+currentWeek()+' held · countdown frozen. Do your own thing — nothing falls behind.'
+      : 'Since '+since+' — recording the break. Race day and the countdown are not affected; sessions you miss stay missed. Restart a block later to make up ground.';
+    el.innerHTML='<div class="pauseban"><span class="pdot"></span><div class="ptx"><div class="p1">Program paused</div><div class="p2">'+msg+'</div></div><button class="btn" onclick="resumeProgram()">▶ Resume</button></div>';
+  } else if((p.days||0)>0 && S.raceAnchored===false){
     el.innerHTML='<div class="pausenote">Timeline shifted <b>+'+p.days+' day'+(p.days===1?'':'s')+'</b> from pauses (race + all dates moved). <button class="lnk" onclick="pauseProgram()">Pause again</button> · <button class="lnk" onclick="resetPause()">Reset to original</button></div>';
   } else {
     el.innerHTML='<div class="pausenote"><button class="lnk" onclick="pauseProgram()">⏸ Pause program</button> — freezes the plan and countdown while you travel or take time off.</div>';
   }
 }
 function pauseProgram(){ if(!S.pause) S.pause={active:false,days:0}; if(S.pause.active) return; const t=new Date(); t.setHours(0,0,0,0); S.pause.active=true; S.pause.since=t.toISOString().slice(0,10); save(); renderAll(); toast('Program paused — timeline frozen'); }
-function resumeProgram(){ const p=S.pause; if(!p||!p.active) return; const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); const off=Math.max(0,Math.floor((t-s)/864e5)); p.days=(p.days||0)+off; p.active=false; delete p.since; save(); renderAll(); const rd=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); toast(off?('Resumed · +'+off+' day'+(off===1?'':'s')+' · race now '+rd):'Resumed'); }
+function resumeProgram(){ const p=S.pause; if(!p||!p.active) return; const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); const off=Math.max(0,Math.floor((t-s)/864e5)); p.days=(p.days||0)+off; p.active=false; delete p.since; save(); renderAll(); const rd=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); toast(off?('Resumed · +'+off+' day'+(off===1?'':'s')+(S.raceAnchored===false?' · race now '+rd:'')):'Resumed'); }
 function resetPause(){ S.pause={active:false,days:0}; save(); renderAll(); toast('Timeline reset to original dates'); }
 
 /* =================== DASHBOARD =================== */

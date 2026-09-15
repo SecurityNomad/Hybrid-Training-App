@@ -89,9 +89,11 @@ module.exports = [
     fn: () => {
       const r = effRace();
       if (r.getMonth() !== 8 || r.getDate() !== 26) return [false, 'race moved to ' + r.toDateString()];
-      // plan start still slides, so the athlete is shown an earlier week
+      // anchored pause is informational only — the calendar keeps running, so
+      // plan start must NOT slide either (real time simply passes, and
+      // currentWeek() advances on its own instead of freezing).
       const s = effStart();
-      if (s.getDate() === 29 && s.getMonth() === 5) return [false, 'effStart did not shift'];
+      if (s.getDate() !== 29 || s.getMonth() !== 5) return [false, 'effStart shifted to ' + s.toDateString()];
       return [true, ''];
     }
   },
@@ -102,6 +104,48 @@ module.exports = [
     fn: () => {
       const r = effRace();
       if (r.getMonth() !== 9 || r.getDate() !== 6) return [false, 'expected 6 Oct, got ' + r.toDateString()];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'effStart: unaffected by an anchored pause, shifted by an unanchored one',
+    now: '2026-09-14',
+    state: { planStart: '2026-06-29', raceAnchored: true, pause: { active: false, days: 10 } },
+    fn: () => {
+      let s = effStart();
+      if (s.getMonth() !== 5 || s.getDate() !== 29) return [false, 'anchored: effStart moved to ' + s.toDateString()];
+      S.raceAnchored = false; save();
+      s = effStart();
+      if (s.getMonth() !== 6 || s.getDate() !== 9) return [false, 'unanchored: expected 9 Jul, got ' + s.toDateString()];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'renderPause (active, anchored) does not claim the countdown is frozen',
+    now: '2026-09-14',
+    state: { raceAnchored: true, pause: { active: true, days: 0, since: '2026-08-31' } },
+    fn: () => {
+      renderPause();
+      const txt = document.getElementById('d-pause').textContent;
+      if (/frozen/i.test(txt)) return [false, 'still claims the countdown is frozen: ' + txt];
+      if (/held/i.test(txt)) return [false, 'still claims the week is held: ' + txt];
+      if (!/race day/i.test(txt)) return [false, 'does not mention race day: ' + txt];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'resumeProgram toast omits "race now" when anchored, keeps it when not',
+    now: '2026-09-14',
+    state: { raceAnchored: true, planStart: '2026-06-29', pause: { active: true, days: 0, since: '2026-08-31' } },
+    fn: () => {
+      resumeProgram();
+      let t = document.querySelector('#toastWrap .toast:last-child').textContent;
+      if (/race now/i.test(t)) return [false, 'anchored toast still says race now: ' + t];
+      if (!/\+\d+ day/.test(t)) return [false, 'anchored toast lost the +N days: ' + t];
+      S.raceAnchored = false; S.pause = { active: true, days: 0, since: '2026-08-31' }; save();
+      resumeProgram();
+      t = document.querySelector('#toastWrap .toast:last-child').textContent;
+      if (!/race now/i.test(t)) return [false, 'unanchored toast dropped race now: ' + t];
       return [true, ''];
     }
   },
