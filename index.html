@@ -1409,7 +1409,7 @@ function renderDash(){
   const now=new Date(); now.setHours(0,0,0,0);
   const days=Math.round((effRace()-now)/864e5);
   document.getElementById('d-count').innerHTML = days>0 ? days+'<small> days to go</small>' : (days===0?'RACE DAY 🏁':'DONE 🏁');
-  document.getElementById('d-racedate').textContent=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+(pauseShiftDays()?' · +'+pauseShiftDays()+'d':'');
+  document.getElementById('d-racedate').textContent=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+(S.raceAnchored===false&&pauseShiftDays()?' · +'+pauseShiftDays()+'d':'');
   renderPause();
   const cw=currentWeek();
   const wk=WEEKS.find(w=>w.w===cw);

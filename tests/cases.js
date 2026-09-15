@@ -130,5 +130,26 @@ module.exports = [
       if (S.planStart !== '2026-07-01') return [false, 'not idempotent'];
       return [true, ''];
     }
+  },
+  {
+    name: 'race-date badge shows +Nd only when the race actually moves',
+    now: '2026-09-15',
+    // planStart set so migrateDates() (guarded on S.planStart) skips and leaves
+    // pause.days live — otherwise migration folds the 10 days into raceDate and
+    // pauseShiftDays() reads 0 by the time renderDash() runs.
+    state: { raceAnchored: false, planStart: '2026-06-29', pause: { active: false, days: 10 } },
+    fn: () => {
+      renderDash();
+      const t = document.getElementById('d-racedate').textContent;
+      if (t.indexOf('+10d') < 0) return [false, 'unanchored should show the shift: ' + t];
+      S.raceAnchored = true; renderDash();
+      const t2 = document.getElementById('d-racedate').textContent;
+      if (t2.indexOf('+10d') >= 0) return [false, 'anchored must not claim a shift: ' + t2];
+      // Chromium's en-GB month abbreviation for September is 'Sept', not 'Sep' -
+      // check day/month/year pieces rather than a hardcoded 'Sep' string.
+      if (t2.indexOf('26') < 0 || t2.indexOf('Sep') < 0 || t2.indexOf('2026') < 0 || t2.indexOf('Oct') >= 0)
+        return [false, 'anchored race date wrong: ' + t2];
+      return [true, ''];
+    }
   }
 ];
