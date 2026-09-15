@@ -224,5 +224,79 @@ module.exports = [
       if (e !== 13) return [false, 'got ' + e];
       return [true, ''];
     }
+  },
+  {
+    name: 'weekOfKey parses session and exercise keys',
+    now: '2026-09-14',
+    fn: () => {
+      for (const [k, w] of [['w5s0',5],['w12s3x2',12],['w1s0x0',1],['nonsense',null],['',null]])
+        if (weekOfKey(k) !== w) return [false, k + ' -> ' + weekOfKey(k)];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'clearRange removes only keys inside the range',
+    now: '2026-09-14',
+    state: { done: { w4s0: true, w5s0: true, w9s1: true, w10s0: true },
+             log: { w4s0x0: { sets: [{ w: '100' }] }, w5s0x0: { sets: [{ w: '110' }] },
+                    w9s2x1: { sets: [{ w: '90' }] }, w10s0x0: { sets: [{ w: '120' }] } },
+             notes: { w5s1: 'felt ok', w11s0: 'keep' },
+             result: { w6s3: { t: '31:20' }, w13s3: { t: '29:00' } } },
+    fn: () => {
+      clearRange(5, 9);
+      const left = Object.keys(S.done).concat(Object.keys(S.log), Object.keys(S.notes), Object.keys(S.result)).sort();
+      const want = ['w10s0', 'w10s0x0', 'w11s0', 'w13s3', 'w4s0', 'w4s0x0'].sort();
+      if (JSON.stringify(left) !== JSON.stringify(want))
+        return [false, 'left ' + JSON.stringify(left) + ' want ' + JSON.stringify(want)];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'archiveRange captures the range and numbers the attempt',
+    now: '2026-09-14',
+    state: { done: { w5s0: true, w6s0: true, w10s0: true },
+             log: { w5s0x0: { sets: [{ w: '100', reps: '5' }] } },
+             notes: { w5s1: 'heavy' }, result: { w6s3: { t: '31:20' } } },
+    fn: () => {
+      const rec = archiveRange(5, 9, { block: 2, breakDays: 34, reason: 'illness' });
+      if (S.history.length !== 1) return [false, 'history len ' + S.history.length];
+      if (rec.attempt !== 1) return [false, 'attempt ' + rec.attempt];
+      if (rec.block !== 2 || rec.breakDays !== 34 || rec.reason !== 'illness') return [false, 'meta wrong'];
+      if (rec.archivedOn !== '2026-09-14') return [false, 'archivedOn ' + rec.archivedOn];
+      if (!rec.done.w5s0 || !rec.done.w6s0) return [false, 'done not captured'];
+      if (rec.done.w10s0) return [false, 'captured outside range'];
+      if (!rec.log.w5s0x0) return [false, 'log not captured'];
+      if (rec.notes.w5s1 !== 'heavy') return [false, 'notes not captured'];
+      if (!rec.result.w6s3) return [false, 'result not captured'];
+      // live maps untouched by archive alone
+      if (!S.done.w5s0) return [false, 'archive cleared live state'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'attemptNumber increments per block from history',
+    now: '2026-09-14',
+    state: { history: [ { block: 2, attempt: 1, weeks: [5,9] }, { block: 2, attempt: 2, weeks: [5,9] },
+                        { block: 1, attempt: 1, weeks: [1,4] } ] },
+    fn: () => {
+      if (attemptNumber(2) !== 3) return [false, 'block 2 -> ' + attemptNumber(2)];
+      if (attemptNumber(1) !== 2) return [false, 'block 1 -> ' + attemptNumber(1)];
+      if (attemptNumber(3) !== 1) return [false, 'block 3 -> ' + attemptNumber(3)];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'bestE1RMFor picks the best Epley estimate per lift in range',
+    now: '2026-09-14',
+    fn: () => {
+      // w1s0x0 is "Back squat 4x6 @ 70-75%" in the shipped plan
+      S.log = { w1s0x0: { sets: [{ w: '100', reps: '5' }, { w: '110', reps: '3' }] } };
+      const best = bestE1RMFor(1, 4);
+      const vals = Object.values(best);
+      if (!vals.length) return [false, 'nothing detected: ' + JSON.stringify(best)];
+      // Epley: 110*(1+3/30)=121 beats 100*(1+5/30)=116.7
+      if (Math.abs(vals[0] - 121) > 0.2) return [false, 'got ' + JSON.stringify(best)];
+      return [true, ''];
+    }
   }
 ];

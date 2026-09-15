@@ -796,6 +796,22 @@ function weeksAvailable(raceISO){ return Math.floor(daysBetween(todayISO(),raceI
 function earliestFittingWeek(raceISO){ const a=weeksAvailable(raceISO); return Math.max(1,Math.min(WEEKS.length,WEEKS.length-a+1)); }
 function raceISOForWeek(w){ const d=addDays(parseISO(todayISO()),weeksNeeded(w)*7); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
+/* =================== ARCHIVE =================== */
+function weekOfKey(k){ const m=String(k).match(/^w(\d+)s\d+/); return m?+m[1]:null; }
+function keysInRange(map,first,last){ return Object.keys(map||{}).filter(k=>{ const w=weekOfKey(k); return w!==null&&w>=first&&w<=last; }); }
+function attemptNumber(n){ return (S.history||[]).filter(h=>h.block===n).length+1; }
+function bestE1RMFor(first,last){ const out={};
+  keysInRange(S.log,first,last).forEach(k=>{ const e=exerciseE1RM(k); if(!e) return; const it=itemForKey(k); const L=it?detectLift(it):null; const id=L?L.k:(it?movementKey(movementName(it)):k);
+    if(!out[id]||e>out[id]) out[id]=Math.round(e*10)/10; });
+  return out; }
+function archiveRange(first,last,meta){ meta=meta||{};
+  const pick=m=>{ const o={}; keysInRange(m,first,last).forEach(k=>o[k]=m[k]); return o; };
+  const rec={weeks:[first,last], block:(meta.block===undefined?null:meta.block), attempt:attemptNumber(meta.block===undefined?null:meta.block),
+    archivedOn:todayISO(), breakDays:meta.breakDays||0, reason:meta.reason||'',
+    done:pick(S.done), log:pick(S.log), notes:pick(S.notes), result:pick(S.result), bestE1RM:bestE1RMFor(first,last)};
+  if(!Array.isArray(S.history)) S.history=[]; S.history.push(rec); return rec; }
+function clearRange(first,last){ [['done',S.done],['log',S.log],['notes',S.notes],['result',S.result]].forEach(([,m])=>{ keysInRange(m,first,last).forEach(k=>delete m[k]); }); }
+
 /* =================== LIFTS & 1RM =================== */
 const LIFTS = [
   {k:'squat',     n:'Back Squat',            aliases:['back squat','front squat','box squat','squat']},
