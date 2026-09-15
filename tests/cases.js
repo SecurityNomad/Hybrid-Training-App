@@ -85,7 +85,10 @@ module.exports = [
   {
     name: 'anchored pause does not move race day',
     now: '2026-09-14',
-    state: { raceAnchored: true, pause: { active: true, days: 0, since: '2026-08-31' } },
+    // planStart set so migrateDates() (guarded on S.planStart) skips — otherwise
+    // an active pause with no planStart now migrates on load (F-4) and this test
+    // would be checking post-migration dates instead of the anchored formula.
+    state: { planStart: '2026-06-29', raceAnchored: true, pause: { active: true, days: 0, since: '2026-08-31' } },
     fn: () => {
       const r = effRace();
       if (r.getMonth() !== 8 || r.getDate() !== 26) return [false, 'race moved to ' + r.toDateString()];
@@ -100,7 +103,9 @@ module.exports = [
   {
     name: 'unanchored pause moves race day (legacy Model A)',
     now: '2026-09-14',
-    state: { raceAnchored: false, pause: { active: false, days: 10 } },
+    // planStart set so migrateDates() skips (see note above) — this test is
+    // about the live pauseShiftDays() formula, not the one-shot migration.
+    state: { planStart: '2026-06-29', raceAnchored: false, pause: { active: false, days: 10 } },
     fn: () => {
       const r = effRace();
       if (r.getMonth() !== 9 || r.getDate() !== 6) return [false, 'expected 6 Oct, got ' + r.toDateString()];
@@ -180,17 +185,20 @@ module.exports = [
     }
   },
   {
-    name: 'migration: accumulated pause.days folds in, effective dates unchanged',
+    name: 'migration: accumulated pause.days folds into planStart only, race day stays real (F-4)',
     now: '2026-09-14',
     state: { pause: { active: false, days: 10 } },
     fn: () => {
-      // migrateDates ran at load. Dates must look exactly as legacy Model A showed them.
+      // migrateDates ran at load. F-4 deliberately deviates from a literal reading
+      // of the spec: it bakes the shift into planStart (so the athlete stays on
+      // the week she was on) but must NOT touch raceDate — race day is a fixed
+      // real event, and shifting it would leave the countdown silently wrong.
       if (S.pause.days !== 0) return [false, 'pause.days not cleared: ' + S.pause.days];
       if (S.planStart !== '2026-07-09') return [false, 'planStart ' + S.planStart];
-      if (S.raceDate !== '2026-10-06') return [false, 'raceDate ' + S.raceDate];
+      if (S.raceDate !== null) return [false, 'raceDate should stay null, got ' + S.raceDate];
       const s = effStart(), r = effRace();
       if (s.getMonth() !== 6 || s.getDate() !== 9) return [false, 'effStart ' + s.toDateString()];
-      if (r.getMonth() !== 9 || r.getDate() !== 6) return [false, 'effRace ' + r.toDateString()];
+      if (r.getMonth() !== 8 || r.getDate() !== 26) return [false, 'effRace should be the real race day, got ' + r.toDateString()];
       return [true, ''];
     }
   },
@@ -473,7 +481,7 @@ module.exports = [
     }
   },
   {
-    name: 'prescWeight returns empty when no 1RM is set, discount or not',
+    name: 'prescWeight returns empty when no 1RM is set',
     now: '2026-09-14',
     fn: () => {
       S.oneRM = {}; S.discount = { pct: 10, throughWeek: 13 };
@@ -677,6 +685,96 @@ module.exports = [
       const fit = document.getElementById('rw-fit').innerHTML;
       if (fit) return [false, 'stale verdict survived into the collapsed state: ' + fit];
       return [true, ''];
+    }
+  },
+  {
+    name: 'F-1: pausing does not launder a long break down to 0 days off',
+    now: '2026-09-14',
+    state: { lastActive: '2026-07-16' },   // 60 days off
+    fn: () => {
+      pauseProgram();
+      const d = breakDays();
+      if (d < 55) return [false, 'breakDays dropped to ' + d + ' after tapping pause'];
+      if (breakAdvice(d).tier !== 'plan') return [false, 'tier ' + breakAdvice(d).tier + ', expected plan'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'F-2: stale 1RM marker survives a doRewind for the length of the comeback block',
+    now: '2026-09-14',
+    state: { lastActive: '2026-06-16' },   // 90 days off, well past the 28-day threshold
+    fn: () => {
+      if (!e1rmStale()) return [false, 'precondition: should be stale before the rewind'];
+      const rec = doRewind({ targetWeek: 5, raceISO: '2026-12-05', discountPct: 10, reason: 'illness' });
+      // doRewind stamps S.lastActive = today, so breakDays() alone would now read 0 -
+      // e1rmStale() must still hold via S.discount.stale for the rest of this block.
+      if (!e1rmStale()) return [false, 'e1rmStale flipped off immediately after the rewind'];
+      if (!staleMark()) return [false, 'staleMark() empty right after the rewind'];
+      S.planStart = rewindAnchorISO(rec.weeks[1] + 1);  // now one week past the comeback block
+      if (e1rmStale()) return [false, 'stale marker should end once the comeback block is over'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'F-4: migration bakes a currently-active pause into planStart, never raceDate',
+    now: '2026-09-14',
+    state: { pause: { active: true, since: '2026-09-04' } },   // 10 days elapsed, no planStart yet
+    fn: () => {
+      if (!S.planStart) return [false, 'planStart not set by migration'];
+      if (S.raceDate !== null) return [false, 'raceDate should stay null, got ' + S.raceDate];
+      const r = effRace();
+      if (r.getFullYear() !== 2026 || r.getMonth() !== 8 || r.getDate() !== 26)
+        return [false, 'effRace is not the true race date: ' + r.toDateString()];
+      if (S.pause.days !== 0) return [false, 'pause.days not zeroed: ' + S.pause.days];
+      if (S.pause.active) return [false, 'pause still marked active after migration'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'F-3: a tampered comeback discount input is clamped, not trusted',
+    now: '2026-09-14',
+    state: { lastActive: '2026-08-05', oneRM: { squat: '140' } },   // 40 days off -> block recommended
+    fn: () => {
+      openRewind();
+      const opt = document.querySelector('#rw-options .rw-opt.on');
+      if (!opt) return [false, 'no option preselected'];
+      document.getElementById('rw-disc').value = '100';   // way past the advisory max
+      document.getElementById('rw-race').value = '2026-12-19';
+      confirmRewind();
+      if (!S.discount) return [false, 'no discount stored'];
+      if (S.discount.pct > 30 || S.discount.pct < 0) return [false, 'discount not clamped: ' + S.discount.pct];
+      const f = discountFactor();
+      if (!(f >= 0 && f <= 1)) return [false, 'discountFactor out of bounds: ' + f];
+      const w = prescWeight('Back squat 4×6 @ 70%');
+      if (!(w > 0)) return [false, 'prescWeight not positive: ' + w];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'F-5: importData re-derives dates from a pre-branch backup',
+    now: '2026-09-14',
+    fn: () => {
+      // A backup exported before this branch: none of the six new date/history
+      // fields exist, and pause.days is banked the old (Model A) way.
+      const legacy = JSON.stringify({
+        done: {}, bench: {}, check: {}, oneRM: {}, log: {}, videos: {}, notes: {},
+        e1rmHist: {}, prefs: {}, result: {}, swap: {}, swapGlobal: {}, e1rmNames: {},
+        pause: { active: false, days: 10 }
+      });
+      const file = new File([legacy], 'backup.json', { type: 'application/json' });
+      importData({ target: { files: [file] } });
+      return new Promise(resolve => {
+        const check = () => {
+          if (!S.planStart) { setTimeout(check, 20); return; }  // FileReader is async
+          const need = ['lastActive', 'planStart', 'raceDate', 'raceAnchored', 'history', 'discount'];
+          const missing = need.filter(k => !(k in S));
+          if (missing.length) return resolve([false, 'missing fields: ' + missing.join(',')]);
+          if (S.planStart !== '2026-07-09') return resolve([false, 'planStart ' + S.planStart]);
+          if (S.raceDate !== null) return resolve([false, 'raceDate should stay null, got ' + S.raceDate]);
+          resolve([true, '']);
+        };
+        check();
+      });
     }
   }
 ];

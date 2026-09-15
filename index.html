@@ -788,18 +788,35 @@ const METRICS = [
 /* =================== STATE =================== */
 let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}, result:{}, swap:{}, swapGlobal:{}, e1rmNames:{}, pause:{active:false,days:0}, lastActive:null, planStart:null, raceDate:null, raceAnchored:true, history:[], discount:null};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
-function migrateDates(){ if(S.planStart) return; const d=(S.pause&&S.pause.days)||0; if(d<=0) return;
+// F-4: migrates legacy Model A pause banking (pause.days, and pause.active/since
+// accrued right now — pauseShiftDays() covers both) onto planStart only. Deliberately
+// does NOT shift raceDate: race day is a fixed external event, and baking a stale
+// offset into it would leave the countdown silently wrong forever. This preserves
+// the week the athlete is currently on without ever pointing the countdown past
+// the real race.
+function migrateDates(){ if(S.planStart) return; const d=pauseShiftDays(); if(d<=0) return;
   const iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
-  S.planStart=iso(addDays(new Date(PLAN_START),d)); S.raceDate=iso(addDays(new Date(RACE_DATE),d)); S.pause.days=0; save(); }
+  S.planStart=iso(addDays(new Date(PLAN_START),d)); S.pause={active:false,days:0};
+  S.prefs=S.prefs||{}; S.prefs.migratedV18=true; save(); }
 migrateDates();
-function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
+if(S.prefs && S.prefs.migratedV18){
+  const rd=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  toast('Race day is fixed at '+rd+'. You\'re in Week '+currentWeek()+'.');
+  delete S.prefs.migratedV18; save();
+}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){ toast('Could not save — storage may be full','err'); } }
 
 /* =================== DATES + BREAK GATE =================== */
 function todayISO(){ const d=new Date(); d.setHours(0,0,0,0); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function parseISO(s){ const d=new Date(s+'T00:00:00'); d.setHours(0,0,0,0); return d; }
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 function daysBetween(a,b){ return Math.round((parseISO(b)-parseISO(a))/864e5); }
-function lastActiveISO(){ const c=[]; if(S.lastActive) c.push(S.lastActive); if(S.pause&&S.pause.since) c.push(S.pause.since);
+// F-1: deliberately excludes S.pause.since — the spec's literal formula
+// (today - max(lastActive, pause.since)) defeats its own intent: tapping
+// "Pause program" after a long break stamps pause.since = today, which would
+// zero breakDays() the moment the rewind gate is needed most. lastActive /
+// e1rmHist / bench dates already cover the pre-lastActive fallback.
+function lastActiveISO(){ const c=[]; if(S.lastActive) c.push(S.lastActive);
   Object.keys(S.e1rmHist||{}).forEach(k=>(S.e1rmHist[k]||[]).forEach(e=>e.date&&c.push(e.date)));
   Object.keys(S.bench||{}).forEach(k=>(S.bench[k]||[]).forEach(e=>e.date&&c.push(e.date)));
   return c.length? c.sort()[c.length-1] : null; }
@@ -816,7 +833,7 @@ function weekDates(w){ const a=effStart(); a.setDate(a.getDate()+(w-1)*7); const
 function currentWeek(){ const now=new Date(); now.setHours(0,0,0,0); const diff=Math.floor((now-effStart())/(864e5)); if(diff<0) return 0; const w=Math.floor(diff/7)+1; return Math.min(w,14); }
 
 /* =================== REWIND + FIT MATHS =================== */
-function blockRange(n){ const b=BLOCKS.find(x=>x.n===n); return b?[b.weeks[0],b.weeks[1]]:[1,13]; }
+function blockRange(n){ const b=BLOCKS.find(x=>x.n===n); return b?[b.weeks[0],b.weeks[1]]:null; }
 function blockOfWeek(w){ const b=BLOCKS.find(x=>w>=x.weeks[0]&&w<=x.weeks[1]); return b?b.n:1; }
 function rewindAnchorISO(w){ const d=addDays(parseISO(todayISO()),-(w-1)*7); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function weeksNeeded(w){ return WEEKS.length-(w-1); }
@@ -847,16 +864,24 @@ function lastAttemptLine(key){ const h=(S.history||[]).filter(x=>x.log&&x.log[ke
   if(!bits.length) return '';
   return '<div class="lasttime">Last time: '+escapeHtml(bits.join(' '))+'</div>'; }
 function staleMark(){ return e1rmStale()?'<span class="stale1rm"> (stale 1RM)</span>':''; }
+function discountMark(){ const d=S.discount; return (d&&d.pct&&currentWeek()<=d.throughWeek)?'<span class="stale1rm"> (−'+d.pct+'% comeback)</span>':''; }
+// F-6: bn is always derived from the target week, never taken from the caller
+// (o.blockN, if passed, is ignored) — a mismatched blockN would archive one
+// range while re-anchoring outside it, destroying logged training for a
+// block the athlete isn't being sent to. blockRange() returning null (unknown
+// block) aborts the whole rewind instead of falling back to "wipe weeks 1-13".
 function doRewind(o){ const t=Math.max(1,Math.min(WEEKS.length,+o.targetWeek||1));
-  const single=!!o.single, bn=single?null:(o.blockN||blockOfWeek(t));
-  const range=single?[t,t]:blockRange(bn); const first=single?t:Math.min(range[0],t), last=range[1];
-  const rec=archiveRange(first,last,{block:bn,breakDays:breakDays(),reason:o.reason||''});
+  const single=!!o.single, bn=single?null:blockOfWeek(t);
+  const range=single?[t,t]:blockRange(bn); if(!range) return null;
+  const first=single?t:Math.min(range[0],t), last=range[1];
+  const bd=breakDays();
+  const rec=archiveRange(first,last,{block:bn,breakDays:bd,reason:o.reason||''});
   clearRange(first,last);
   S.planStart=rewindAnchorISO(t);
   if(o.raceISO) S.raceDate=o.raceISO;
   S.pause={active:false,days:0};
-  const pct=+o.discountPct||0;
-  S.discount=pct>0?{pct:pct,throughWeek:last}:null;
+  const pct=Math.max(0,Math.min(30,+o.discountPct||0));
+  S.discount=pct>0?{pct:pct,throughWeek:last,stale:bd>28}:null;
   S.lastActive=todayISO();
   save(); return rec; }
 
@@ -1058,7 +1083,11 @@ const DEMO_LIB = ['SkiErg','Sled Push','Sled Pull','Burpee Broad Jump','Rowing',
 function epley(w,reps){ return w*(1+reps/30); }
 function prescReps(item){ const m=item.match(/\d+\s*[×x]\s*(\d+)/); return m?parseInt(m[1],10):''; }
 function discountFactor(){ const d=S.discount; if(!d||!d.pct) return 1; return currentWeek()<=d.throughWeek?1-d.pct/100:1; }
-function e1rmStale(){ return breakDays()>28; }
+// F-2: doRewind stamps S.lastActive on restart, so breakDays() alone drops to 0
+// right when the comeback block starts — exactly when the athlete is lifting
+// against a stale max. S.discount.stale (captured at rewind time) keeps the
+// marker alive through the block it applies to.
+function e1rmStale(){ return breakDays()>28 || !!(S.discount&&S.discount.stale&&currentWeek()<=S.discount.throughWeek); }
 function prescWeight(item){ const L=detectLift(item); const m=item.match(/@\s*(\d+(?:\.\d+)?)/); if(L&&m&&S.oneRM[L.k]&&parseFloat(S.oneRM[L.k])>0) return round2_5(parseFloat(S.oneRM[L.k])*parseFloat(m[1])/100*discountFactor()); return ''; }
 function movementName(item){ const m=item.match(/^(.*?)(?=\s\d+\s*[×x])/); let s=(m?m[1]:item).trim(); return s.replace(/[·:,+\-]+$/,'').trim(); }
 function movementKey(name){ return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
@@ -1402,7 +1431,7 @@ function renderExercise(id,item,j,sType,isDeload){
   const prog=progHTML(key);
   const rpeT=targetRPE(item,sType,isDeload);
   const measTxt = meas ? tgtSets+' × '+meas.per+(meas.unit?meas.unit:(dom.type==='wr'||dom.type==='reps'?' reps':'')) : tgtSets+' × '+(tgtReps||'—');
-  const tgtLine='<div class="setrow-target">Target: '+measTxt+(dom.type==='wr'&&pw!==''?' @ ~'+fmtKg(pw)+' kg'+staleMark():'')+' · <span class="rpe-tgt">RPE '+rpeT+'</span></div>'+lastAttemptLine(key);
+  const tgtLine='<div class="setrow-target">Target: '+measTxt+(dom.type==='wr'&&pw!==''?' @ ~'+fmtKg(pw)+' kg'+staleMark()+discountMark():'')+' · <span class="rpe-tgt">RPE '+rpeT+'</span></div>'+lastAttemptLine(key);
   const nameLine = swapped ? '<span class="swapped">'+escapeHtml(swapped)+'</span> <span class="muted" style="font-size:11px">↔ '+escapeHtml(rawName)+'</span>' : annotateDesc(item);
   return '<div class="logex"><div class="lx">'+nameLine+' <button class="demobtn" title="Form demo" data-demo="'+name.replace(/"/g,'')+'">'+ic('play')+'</button> <button class="swapbtn" title="Swap exercise" data-swap="'+key+'" data-swapname="'+rawName.replace(/"/g,'')+'">'+ic('swap')+'</button></div>'+tgtLine+rows+controls+'<div class="progslot" data-progfor="'+key+'">'+prog+'</div></div>';
 }
@@ -1485,7 +1514,9 @@ function resetPause(){ S.pause={active:false,days:0}; save(); renderAll(); toast
 
 /* =================== REWIND SHEET =================== */
 let rewindPick=null, rewindExpanded=false;
-function rewindOptions(){ const cw=currentWeek()||1, days=breakDays(), tier=breakAdvice(days).tier, out=[];
+// F-7: currentWeek() clamps to 14 (one past the plan) once the race date has
+// passed, which would otherwise let this offer a nonexistent "Repeat Week 14".
+function rewindOptions(){ const cw=Math.min(WEEKS.length,currentWeek()||1), days=breakDays(), tier=breakAdvice(days).tier, out=[];
   out.push({targetWeek:cw, blockN:null, single:true, label:'Repeat Week '+cw, sub:'Redo this week only', recommended:tier==='week'});
   BLOCKS.forEach(b=>{ const first=b.weeks[0]; if(first>cw) return;
     const sess=WEEKS.filter(w=>w.w>=first&&w.w<=b.weeks[1]).reduce((n,w)=>n+w.sess.length,0);
@@ -1503,7 +1534,7 @@ function openRewind(){ rewindPick=null; rewindExpanded=false; const m=document.g
 function closeRewind(){ sheetOut(document.getElementById('rewindModal')); }
 function renderRewindSheet(){ const days=breakDays(), tier=breakAdvice(days).tier, opts=rewindOptions();
   const adv=document.getElementById('rw-advice');
-  adv.innerHTML = days===0 ? 'No training history yet — pick any starting point.'
+  adv.innerHTML = lastActiveISO()===null ? 'No training history yet — pick any starting point.'
     : tier==='none' ? '<b>'+days+' days off won\'t have cost you.</b> Picking up where you left off is the better call. Restart anyway if you want to.'
     : days+' days since your last logged session. '+(tier==='week'?'Repeating this week is usually enough.':tier==='block'?'Restarting the current block is the sensible reset.':'After this long, starting again from Block 1 is the honest option.');
   const collapsed = tier==='none' && !rewindExpanded;
@@ -1528,7 +1559,7 @@ function confirmRewind(){ const o=rewindOptions()[rewindPick]; if(!o){ toast('Pi
   const race=document.getElementById('rw-race').value;
   if(!race||daysBetween(todayISO(),race)<=0){ toast('Pick a race date in the future','err'); return; }
   doRewind({targetWeek:o.targetWeek, raceISO:race, discountPct:+document.getElementById('rw-disc').value||0,
-    reason:document.getElementById('rw-reason').value.trim(), blockN:o.blockN, single:o.single});
+    reason:document.getElementById('rw-reason').value.trim(), single:o.single});
   closeRewind(); renderAll(); toast(o.single?'Repeating Week '+o.targetWeek:'Block '+o.blockN+' restarted'); }
 
 /* =================== DASHBOARD =================== */
@@ -1655,7 +1686,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{},prefs:{},result:{},swap:{},swapGlobal:{},e1rmNames:{},pause:{active:false,days:0}},JSON.parse(r.result)); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{},prefs:{},result:{},swap:{},swapGlobal:{},e1rmNames:{},pause:{active:false,days:0},lastActive:null,planStart:null,raceDate:null,raceAnchored:true,history:[],discount:null},JSON.parse(r.result)); migrateDates(); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
   r.readAsText(f);
 }
 
