@@ -1450,10 +1450,10 @@ function renderPause(){
   } else if((p.days||0)>0 && S.raceAnchored===false){
     el.innerHTML='<div class="pausenote">Timeline shifted <b>+'+p.days+' day'+(p.days===1?'':'s')+'</b> from pauses (race + all dates moved). <button class="lnk" onclick="pauseProgram()">Pause again</button> · <button class="lnk" onclick="resetPause()">Reset to original</button></div>';
   } else {
-    el.innerHTML='<div class="pausenote"><button class="lnk" onclick="pauseProgram()">⏸ Pause program</button> — freezes the plan and countdown while you travel or take time off.</div>';
+    el.innerHTML='<div class="pausenote"><button class="lnk" onclick="pauseProgram()">⏸ Pause program</button> — '+(S.raceAnchored===false?'freezes the plan and countdown while you travel or take time off.':'records time off without moving race day or the countdown.')+'</div>';
   }
 }
-function pauseProgram(){ if(!S.pause) S.pause={active:false,days:0}; if(S.pause.active) return; const t=new Date(); t.setHours(0,0,0,0); S.pause.active=true; S.pause.since=t.toISOString().slice(0,10); save(); renderAll(); toast('Program paused — timeline frozen'); }
+function pauseProgram(){ if(!S.pause) S.pause={active:false,days:0}; if(S.pause.active) return; const t=new Date(); t.setHours(0,0,0,0); S.pause.active=true; S.pause.since=t.toISOString().slice(0,10); save(); renderAll(); toast(S.raceAnchored===false?'Program paused — timeline frozen':'Program paused — recording the break'); }
 function resumeProgram(){ const p=S.pause; if(!p||!p.active) return; const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); const off=Math.max(0,Math.floor((t-s)/864e5)); p.days=(p.days||0)+off; p.active=false; delete p.since; save(); renderAll(); const rd=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); toast(off?('Resumed · +'+off+' day'+(off===1?'':'s')+(S.raceAnchored===false?' · race now '+rd:'')):'Resumed'); }
 function resetPause(){ S.pause={active:false,days:0}; save(); renderAll(); toast('Timeline reset to original dates'); }
 

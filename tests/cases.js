@@ -150,6 +150,36 @@ module.exports = [
     }
   },
   {
+    name: 'pauseProgram toast does not claim frozen when anchored, does when not',
+    now: '2026-09-14',
+    state: { raceAnchored: true, pause: { active: false, days: 0 } },
+    fn: () => {
+      pauseProgram();
+      let t = document.querySelector('#toastWrap .toast:last-child').textContent;
+      if (/frozen|freezes/i.test(t)) return [false, 'anchored toast still claims frozen: ' + t];
+      S.raceAnchored = false; S.pause = { active: false, days: 0 }; save();
+      pauseProgram();
+      t = document.querySelector('#toastWrap .toast:last-child').textContent;
+      if (!/frozen|freezes/i.test(t)) return [false, 'unanchored toast dropped frozen wording: ' + t];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'renderPause idle line does not promise freezing when anchored, does when not',
+    now: '2026-09-14',
+    state: { raceAnchored: true, pause: { active: false, days: 0 } },
+    fn: () => {
+      renderPause();
+      let t = document.getElementById('d-pause').textContent;
+      if (/frozen|freezes/i.test(t)) return [false, 'anchored idle line still claims freezing: ' + t];
+      S.raceAnchored = false; save();
+      renderPause();
+      t = document.getElementById('d-pause').textContent;
+      if (!/frozen|freezes/i.test(t)) return [false, 'unanchored idle line dropped freezing wording: ' + t];
+      return [true, ''];
+    }
+  },
+  {
     name: 'migration: accumulated pause.days folds in, effective dates unchanged',
     now: '2026-09-14',
     state: { pause: { active: false, days: 10 } },
