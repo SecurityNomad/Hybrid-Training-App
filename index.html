@@ -758,9 +758,22 @@ const METRICS = [
 ];
 
 /* =================== STATE =================== */
-let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}, result:{}, swap:{}, swapGlobal:{}, e1rmNames:{}, pause:{active:false,days:0}};
+let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}, result:{}, swap:{}, swapGlobal:{}, e1rmNames:{}, pause:{active:false,days:0}, lastActive:null, planStart:null, raceDate:null, raceAnchored:true, history:[], discount:null};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
+
+/* =================== DATES + BREAK GATE =================== */
+function todayISO(){ const d=new Date(); d.setHours(0,0,0,0); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function parseISO(s){ const d=new Date(s+'T00:00:00'); d.setHours(0,0,0,0); return d; }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function daysBetween(a,b){ return Math.round((parseISO(b)-parseISO(a))/864e5); }
+function lastActiveISO(){ const c=[]; if(S.lastActive) c.push(S.lastActive); if(S.pause&&S.pause.since) c.push(S.pause.since);
+  Object.keys(S.e1rmHist||{}).forEach(k=>(S.e1rmHist[k]||[]).forEach(e=>e.date&&c.push(e.date)));
+  Object.keys(S.bench||{}).forEach(k=>(S.bench[k]||[]).forEach(e=>e.date&&c.push(e.date)));
+  return c.length? c.sort()[c.length-1] : null; }
+function breakDays(){ const l=lastActiveISO(); if(!l) return 0; return Math.max(0,daysBetween(l,todayISO())); }
+function breakAdvice(days){ if(days<=14) return {tier:'none',discountPct:0}; if(days<=28) return {tier:'week',discountPct:5}; if(days<=56) return {tier:'block',discountPct:10}; return {tier:'plan',discountPct:15}; }
+function saveTrained(){ S.lastActive=todayISO(); save(); }
 
 /* =================== HELPERS =================== */
 function fmtDate(d){ return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
@@ -1210,7 +1223,7 @@ function closeWorkout(){ const ov=document.getElementById('workoutMode'), inner=
   makeSpring(1,0,{response:0.26,onUpdate:v=>{ov.style.opacity=v;}});
   makeSpring(0,44,{response:0.28,onUpdate:v=>{if(inner)inner.style.transform='translateY('+v.toFixed(1)+'px)';},onComplete:finish});
 }
-function toggleWorkoutDone(){ if(!workoutCtx) return; const id='w'+workoutCtx.w+'s'+workoutCtx.i; S.done[id]=!S.done[id]; if(!S.done[id]) delete S.done[id]; save(); if(S.done[id]) celebrate('Session complete — nice work'); renderWorkout(); }
+function toggleWorkoutDone(){ if(!workoutCtx) return; const id='w'+workoutCtx.w+'s'+workoutCtx.i; S.done[id]=!S.done[id]; if(!S.done[id]) delete S.done[id]; saveTrained(); if(S.done[id]) celebrate('Session complete — nice work'); renderWorkout(); }
 function renderWorkout(){
   if(!workoutCtx) return;
   const wk=WEEKS.find(x=>x.w===workoutCtx.w); if(!wk) return; const s=wk.sess[workoutCtx.i]; const id='w'+wk.w+'s'+workoutCtx.i;
@@ -1244,12 +1257,12 @@ function wireWorkout(el){
     if(!S.log[key].sets.some(setHasData)) delete S.log[key];
     let isPR=false;
     if(S.log[key]){ const e=exerciseE1RM(key); if(e){ if(inp.dataset.lift) isPR=recordE1RM(inp.dataset.lift,e)||isPR; else if(inp.dataset.mv) isPR=recordE1RM('~'+inp.dataset.mv,e,inp.dataset.mvname)||isPR; } }
-    save(); savedFlash();
+    saveTrained(); savedFlash();
     if(isPR){ const e2=exerciseE1RM(key); celebrate((inp.dataset.mvname||((LIFTS.find(l=>l.k===inp.dataset.lift)||{}).n)||'New')+' PR — '+fmtKg(round2_5(e2))+' kg est.'); }
     refreshExerciseInPlace(el,key);
   }));
-  el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{ const key=b.dataset.add, tgt=+b.dataset.tgt||1; if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:Array.from({length:tgt},()=>({}))}; S.log[key].sets.push({}); save(); renderWorkout(); }));
-  el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{ const key=b.dataset.del; if(!(S.log[key]&&S.log[key].sets)) return; const popped=S.log[key].sets.pop(), hadData=setHasData(popped); if(S.log[key].sets.length===0||!S.log[key].sets.some(setHasData)) delete S.log[key]; save(); renderWorkout(); if(hadData) toastUndo('Set removed',()=>{ if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:[]}; S.log[key].sets.push(popped); save(); renderWorkout(); }); }));
+  el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{ const key=b.dataset.add, tgt=+b.dataset.tgt||1; if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:Array.from({length:tgt},()=>({}))}; S.log[key].sets.push({}); saveTrained(); renderWorkout(); }));
+  el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{ const key=b.dataset.del; if(!(S.log[key]&&S.log[key].sets)) return; const popped=S.log[key].sets.pop(), hadData=setHasData(popped); if(S.log[key].sets.length===0||!S.log[key].sets.some(setHasData)) delete S.log[key]; saveTrained(); renderWorkout(); if(hadData) toastUndo('Set removed',()=>{ if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:[]}; S.log[key].sets.push(popped); save(); renderWorkout(); }); }));
   el.querySelectorAll('[data-setrm]').forEach(b=>b.addEventListener('click',()=>{ S.oneRM[b.dataset.setrm]=b.dataset.val; save(); renderWorkout(); renderLifts(); toast(((LIFTS.find(l=>l.k===b.dataset.setrm)||{}).n||'Lift')+' 1RM updated ✓'); }));
   el.querySelectorAll('.demobtn').forEach(b=>b.addEventListener('click',()=>openDemo(b.dataset.demo)));
   el.querySelectorAll('.swapbtn').forEach(b=>b.addEventListener('click',()=>openSwap(b.dataset.swap,b.dataset.swapname)));
@@ -1259,7 +1272,7 @@ function wireWorkout(el){
     if(!S.result[rid]) S.result[rid]={};
     if(v) S.result[rid][rf]=v; else delete S.result[rid][rf];
     if(!resultHasData(rid)) delete S.result[rid];
-    save();
+    saveTrained();
   }));
 }
 function renderSession(wk,s,i){
@@ -1317,7 +1330,7 @@ function renderExercise(id,item,j,sType,isDeload){
 function wireWeekView(el){
   el.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',ev=>{
     S.done[ev.target.dataset.id]=ev.target.checked; if(!ev.target.checked) delete S.done[ev.target.dataset.id];
-    save(); renderWeekView(); renderWeekNav(); renderDash();
+    saveTrained(); renderWeekView(); renderWeekNav(); renderDash();
   }));
   el.querySelectorAll('.logbtn').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.log; openLoggers.has(id)?openLoggers.delete(id):openLoggers.add(id); renderWeekView(); }));
   el.querySelectorAll('.setgrid input').forEach(inp=>inp.addEventListener('change',()=>{
@@ -1330,20 +1343,20 @@ function wireWeekView(el){
     if(S.log[key]){ const e=exerciseE1RM(key);
       if(e){ if(inp.dataset.lift) isPR=recordE1RM(inp.dataset.lift,e)||isPR;
              else if(inp.dataset.mv) isPR=recordE1RM('~'+inp.dataset.mv,e,inp.dataset.mvname)||isPR; } }
-    save(); savedFlash();
+    saveTrained(); savedFlash();
     if(isPR){ const e2=exerciseE1RM(key); celebrate((inp.dataset.mvname||((LIFTS.find(l=>l.k===inp.dataset.lift)||{}).n)||'New')+' PR — '+fmtKg(round2_5(e2))+' kg est.'); }
     refreshExerciseInPlace(el,key);
   }));
   el.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
     const key=b.dataset.add, tgt=+b.dataset.tgt||1;
     if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:Array.from({length:tgt},()=>({w:'',reps:'',rpe:''}))};
-    S.log[key].sets.push({w:'',reps:'',rpe:''}); save(); renderWeekView();
+    S.log[key].sets.push({w:'',reps:'',rpe:''}); saveTrained(); renderWeekView();
   }));
   el.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{
     const key=b.dataset.del; if(!(S.log[key]&&S.log[key].sets)) return;
     const popped=S.log[key].sets.pop(), hadData=setHasData(popped);
     if(S.log[key].sets.length===0||!S.log[key].sets.some(setHasData)) delete S.log[key];
-    save(); renderWeekView();
+    saveTrained(); renderWeekView();
     if(hadData) toastUndo('Set removed', ()=>{ if(!(S.log[key]&&Array.isArray(S.log[key].sets))) S.log[key]={sets:[]}; S.log[key].sets.push(popped); save(); renderWeekView(); });
   }));
   el.querySelectorAll('[data-setrm]').forEach(b=>b.addEventListener('click',()=>{ S.oneRM[b.dataset.setrm]=b.dataset.val; save(); renderWeekView(); renderLifts(); toast(((LIFTS.find(l=>l.k===b.dataset.setrm)||{}).n||'Lift')+' 1RM updated ✓'); }));
@@ -1355,7 +1368,7 @@ function wireWeekView(el){
     if(!S.result[id]) S.result[id]={};
     if(v) S.result[id][rf]=v; else delete S.result[id][rf];
     if(!resultHasData(id)) delete S.result[id];
-    save();
+    saveTrained();
     const btn=el.querySelector('.resbtn[data-result="'+id+'"]'); if(btn){ const has=resultHasData(id); btn.classList.toggle('has',has); btn.innerHTML=ic('result')+(has?' Logged ✓':' Log result'); }
   }));
   el.querySelectorAll('.restbtn').forEach(b=>b.addEventListener('click',()=>startRest(+b.dataset.rest,b.dataset.restlabel)));
@@ -1464,7 +1477,7 @@ function addBench(){
   else{ v=parseFloat(raw); if(isNaN(v)){ toast('Enter a number','err'); return; } }
   if(!S.bench[k]) S.bench[k]=[];
   S.bench[k].push({date:date, v:v});
-  save();
+  saveTrained();
   document.getElementById('b-value').value='';
   renderBench(); renderDash(); toast(m.n+' logged ✓');
 }
