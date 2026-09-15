@@ -633,5 +633,35 @@ module.exports = [
       if (currentWeek() !== 10) return [false, 'currentWeek ' + currentWeek()];
       return [true, ''];
     }
+  },
+  {
+    name: 'short break hides the options behind a disclosure and preselects nothing',
+    now: '2026-09-15',
+    state: { lastActive: '2026-09-03' },
+    fn: () => {
+      openRewind();
+      const wrap = document.getElementById('rw-options');
+      if (!wrap) return [false, 'options container missing'];
+      if (wrap.offsetHeight > 0) return [false, 'options visible before disclosure at 12 days off'];
+      if (document.querySelector('#rw-options .rw-opt.on')) return [false, 'an option was preselected at 12 days off'];
+      const btn = [...document.querySelectorAll('button')].find(b => /restart anyway/i.test(b.textContent));
+      if (!btn) return [false, 'no "Restart anyway" disclosure'];
+      btn.click();
+      if (document.getElementById('rw-options').offsetHeight === 0) return [false, 'options still hidden after disclosure'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'long break shows options immediately with the recommendation preselected',
+    now: '2026-09-15',
+    state: { lastActive: '2026-08-05' },
+    fn: () => {
+      openRewind();
+      if (document.getElementById('rw-options').offsetHeight === 0) return [false, 'options hidden at 41 days off'];
+      const on = document.querySelector('#rw-options .rw-opt.on');
+      if (!on) return [false, 'nothing preselected at 41 days off'];
+      if (!/recommended/i.test(on.textContent)) return [false, 'preselected option is not the recommended one'];
+      return [true, ''];
+    }
   }
 ];

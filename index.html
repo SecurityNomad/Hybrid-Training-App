@@ -398,6 +398,7 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
 .rw-opt .rw-s{color:var(--muted);font-size:12px;margin-top:2px}
 .rw-opt .rw-rec{color:var(--accent);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-left:6px}
 .rw-fit-ok{color:var(--green)} .rw-fit-no{color:var(--accent2)}
+#rw-options.rw-collapsed{display:none}
 </style>
 </head>
 <body>
@@ -611,6 +612,7 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
     <div class="sheet-grab"></div>
     <h3>Restart from an earlier week</h3>
     <div id="rw-advice" class="muted" style="font-size:12.5px;margin-bottom:10px"></div>
+    <div id="rw-expand"></div>
     <div id="rw-options"></div>
     <label class="rlab" style="display:block;margin-top:14px">Race date</label>
     <input type="date" id="rw-race" style="width:100%;margin-top:4px" onchange="renderRewindFit()">
@@ -1482,7 +1484,7 @@ function resumeProgram(){ const p=S.pause; if(!p||!p.active) return; const t=new
 function resetPause(){ S.pause={active:false,days:0}; save(); renderAll(); toast('Timeline reset to original dates'); }
 
 /* =================== REWIND SHEET =================== */
-let rewindPick=null;
+let rewindPick=null, rewindExpanded=false;
 function rewindOptions(){ const cw=currentWeek()||1, days=breakDays(), tier=breakAdvice(days).tier, out=[];
   out.push({targetWeek:cw, blockN:null, single:true, label:'Repeat Week '+cw, sub:'Redo this week only', recommended:tier==='week'});
   BLOCKS.forEach(b=>{ const first=b.weeks[0]; if(first>cw) return;
@@ -1493,7 +1495,7 @@ function rewindOptions(){ const cw=currentWeek()||1, days=breakDays(), tier=brea
       sub:'Week '+first+' onward · '+doneN+' of '+sess+' sessions logged',
       recommended:(tier==='block'&&isCur)||(tier==='plan'&&b.n===1)}); });
   return out.filter(o=>o.targetWeek<=cw); }
-function openRewind(){ rewindPick=null; const m=document.getElementById('rewindModal');
+function openRewind(){ rewindPick=null; rewindExpanded=false; const m=document.getElementById('rewindModal');
   const r=effRace(); document.getElementById('rw-race').value=r.getFullYear()+'-'+String(r.getMonth()+1).padStart(2,'0')+'-'+String(r.getDate()).padStart(2,'0');
   document.getElementById('rw-disc').value=breakAdvice(breakDays()).discountPct;
   document.getElementById('rw-reason').value='';
@@ -1504,13 +1506,17 @@ function renderRewindSheet(){ const days=breakDays(), tier=breakAdvice(days).tie
   adv.innerHTML = days===0 ? 'No training history yet — pick any starting point.'
     : tier==='none' ? '<b>'+days+' days off won\'t have cost you.</b> Picking up where you left off is the better call. Restart anyway if you want to.'
     : days+' days since your last logged session. '+(tier==='week'?'Repeating this week is usually enough.':tier==='block'?'Restarting the current block is the sensible reset.':'After this long, starting again from Block 1 is the honest option.');
-  if(rewindPick===null){ const r=opts.findIndex(o=>o.recommended); rewindPick=r>=0?r:0; }
+  const collapsed = tier==='none' && !rewindExpanded;
+  document.getElementById('rw-expand').innerHTML = collapsed ? '<button class="lnk" onclick="expandRewind()">Restart anyway</button>' : '';
+  document.getElementById('rw-options').classList.toggle('rw-collapsed', collapsed);
+  if(!collapsed && rewindPick===null){ const r=opts.findIndex(o=>o.recommended); rewindPick=r>=0?r:0; }
   document.getElementById('rw-options').innerHTML=opts.map((o,i)=>
     '<button class="rw-opt'+(i===rewindPick?' on':'')+'" data-i="'+i+'" data-single="'+(o.single?1:0)+'" onclick="pickRewind('+i+')">'+
     '<div class="rw-t">'+escapeHtml(o.label)+(o.recommended?'<span class="rw-rec">Recommended</span>':'')+'</div>'+
     '<div class="rw-s">'+escapeHtml(o.sub)+'</div></button>').join('');
   renderRewindFit(); }
 function pickRewind(i){ rewindPick=i; renderRewindSheet(); }
+function expandRewind(){ rewindExpanded=true; renderRewindSheet(); }
 function renderRewindFit(){ const o=rewindOptions()[rewindPick]; const el=document.getElementById('rw-fit'); if(!o||!el) return;
   const race=document.getElementById('rw-race').value; if(!race){ el.innerHTML=''; return; }
   if(daysBetween(todayISO(),race)<=0){ el.innerHTML='<span class="rw-fit-no">Pick a race date in the future.</span>'; return; }
