@@ -399,12 +399,75 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
 .rw-opt .rw-rec{color:var(--accent);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-left:6px}
 .rw-fit-ok{color:var(--green)} .rw-fit-no{color:var(--accent2)}
 #rw-options.rw-collapsed{display:none}
+
+/* ===== UX pass: settings sheet, header gear, status banner ===== */
+.hdr-row{display:flex;align-items:flex-start;gap:12px}
+.hdr-txt{flex:1;min-width:0}
+.hdr-gear{flex:0 0 auto;width:44px;height:44px;border-radius:50%;background:var(--card2);border:1px solid var(--line);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;margin-top:4px}
+.hdr-gear svg{width:21px;height:21px}
+.hdr-gear:hover{color:var(--accent);border-color:var(--accent-line)}
+.set-sec{padding:14px 0;border-bottom:1px solid var(--line)}
+.set-sec:last-of-type{border-bottom:none}
+.set-sec .eyebrow{margin-bottom:6px}
+.statusban{display:flex;width:100%;align-items:center;gap:10px;background:color-mix(in oklch,var(--blue) 14%,var(--card));border:1px solid color-mix(in oklch,var(--blue) 38%,var(--line));border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:14px;cursor:pointer;color:var(--text);text-align:left}
+.statusban .sb-t{flex:1;font-family:var(--font-display);font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:13.5px;color:var(--blue)}
+.statusban .sb-a{font-size:12px;color:var(--muted)}
+
+/* ============================================================
+   UX pass — four button roles, applied by class not by guesswork
+   primary (filled) · secondary (outlined) · quiet (tool) · danger
+   ============================================================ */
+.btn,.btn.secondary,.btn.ghost,.btn.quiet,.logbtn,.resbtn,.notebtn,.prepbtn,.demobtn,.swapbtn,.restbtn,.addset,.moretoggle,.wbtn{
+  font-family:var(--font-display);text-transform:uppercase;letter-spacing:.05em;font-weight:800;
+  border-radius:var(--radius-sm);display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  cursor:pointer;line-height:1;transition:transform .06s ease,background .15s,color .15s,border-color .15s}
+/* primary — filled accent */
+.btn,.logbtn,.resbtn{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent);font-size:13.5px;padding:12px 18px;min-height:46px}
+/* secondary — outlined, same footprint as primary */
+.btn.secondary,.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line-strong);font-size:13.5px;padding:12px 18px;min-height:46px}
+.btn.secondary:hover,.btn.ghost:hover{border-color:var(--accent-line);color:var(--accent)}
+/* quiet — small inline tools */
+.btn.quiet,.notebtn,.prepbtn,.demobtn,.swapbtn,.restbtn,.addset,.moretoggle{
+  background:var(--card2);color:var(--muted);border:1px solid var(--line);font-size:11.5px;padding:8px 12px;min-height:36px;letter-spacing:.06em}
+.btn.quiet:hover,.notebtn:hover,.prepbtn:hover,.demobtn:hover,.swapbtn:hover,.restbtn:hover,.addset:hover,.moretoggle:hover{
+  color:var(--accent);border-color:var(--accent-line)}
+/* done/logged state keeps its green, at the same footprint */
+.logbtn.has,.resbtn.has,.notebtn.has{background:transparent;color:var(--green);border:1px solid color-mix(in oklch,var(--green) 45%,var(--line))}
+/* danger */
+.btn.danger{background:transparent;color:var(--red);border:1px solid var(--danger-line);font-size:11.5px;padding:8px 12px;min-height:36px}
+.btn.danger:hover{background:var(--danger-tint)}
+.btn:active,.logbtn:active,.resbtn:active,.notebtn:active,.prepbtn:active,.demobtn:active,.swapbtn:active,.restbtn:active,.addset:active,.moretoggle:active{transform:scale(.96)}
+
+/* ===== How this works — disclosure instead of a wall ===== */
+.howto-t{display:inline-flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--muted);
+  font-family:var(--font-display);text-transform:uppercase;letter-spacing:.08em;font-weight:800;font-size:11.5px;
+  padding:6px 0;margin-bottom:8px;cursor:pointer}
+.howto-t:hover{color:var(--accent)}
+.howto-c{font-size:15px;line-height:1}
+.howto-b{display:none}
+.howto-b.open{display:block}
+
+/* ===== Block segmented control ===== */
+.segbar{display:flex;gap:4px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:8px}
+.seg{flex:1;background:transparent;border:none;border-radius:999px;padding:10px 6px;cursor:pointer;color:var(--muted);
+  font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-weight:800;font-size:12.5px;min-height:40px}
+.seg.on{background:var(--accent);color:var(--accent-ink)}
+.seg-name{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.06em;font-weight:800;
+  font-size:12px;color:var(--muted);margin:0 0 12px 4px}
+
+/* ===== Restart this block, where you are already looking ===== */
+.wv-restart{margin-top:12px}
 </style>
 </head>
 <body>
 <header>
-  <h1>HYROX <span>RACE PREP</span></h1>
-  <div class="sub">13-week build · Race day: Saturday 26 September 2026 · Goal: finish strong, first HYROX</div>
+  <div class="hdr-row">
+    <div class="hdr-txt">
+      <h1>HYROX <span>RACE PREP</span></h1>
+      <div class="sub">13-week build · Race day Sat 26 Sep 2026<br>Goal: finish strong, first HYROX</div>
+    </div>
+    <button class="hdr-gear" id="settingsBtn" onclick="openSettings()" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M19.4 14.5a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.56V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1.11-1.56 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.56-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.56-1.11 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34H9a1.7 1.7 0 001-1.56V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.56 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.56 1H21a2 2 0 010 4h-.1a1.7 1.7 0 00-1.56 1z"/></svg></button>
+  </div>
   <button id="installBtn" class="btn" style="display:none;margin-top:12px">⤓ Install app</button>
   <div id="iosHint" style="display:none;margin-top:10px;font-size:12.5px;color:var(--muted)">To install: tap <b>Share</b> → <b>Add to Home Screen</b>.</div>
 </header>
@@ -436,12 +499,12 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
   <h2 class="sec">Latest Benchmarks</h2>
   <div class="card"><table id="d-benchtable"><thead><tr><th>Metric</th><th>Latest</th><th>First</th><th>Trend</th></tr></thead><tbody></tbody></table>
   <div class="muted" style="font-size:12.5px;margin-top:10px">Log new values in the Benchmarks tab. Test weeks: baseline W1 · retest W7 · retest W10.</div></div>
-  <div class="card" id="reminders" style="margin-top:14px"></div>
 </section>
 
 <!-- ============ PLAN ============ -->
 <section class="tab" id="tab-plan">
-  <div class="note"><b>How to use:</b> pick a <b>block</b>, then a <b>week</b>, and you'll see just that week's sessions. Tick each one as you finish it. On strength days tap <b>Log working sets</b> to record weight, reps and RPE per set; your best set gives an estimated 1RM you can push to the Lifts tab. Tap <b>▶ demo</b> on any exercise for form videos. Core days are Mon, Tue, Wed, Fri plus an optional Sun Zone-2, and Friday can slide to Saturday.</div>
+  <button class="howto-t" id="howto-t" onclick="toggleHowTo()" aria-expanded="false">How this works <span class="howto-c">›</span></button>
+  <div class="note howto-b" id="howto-b"><b>How to use:</b> pick a <b>block</b>, then a <b>week</b>, and you'll see just that week's sessions. Tick each one as you finish it. On strength days tap <b>Log working sets</b> to record weight, reps and RPE per set; your best set gives an estimated 1RM you can push to the Lifts tab. Tap <b>▶ demo</b> on any exercise for form videos. Core days are Mon, Tue, Wed, Fri plus an optional Sun Zone-2, and Friday can slide to Saturday.</div>
   <div id="block-nav" class="subnav"></div>
   <div id="week-nav" class="subnav wk"></div>
   <div id="week-view"></div>
@@ -460,11 +523,7 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
     <div class="muted" id="b-hint" style="font-size:12.5px;margin-top:8px"></div>
   </div>
   <div id="b-cards" style="margin-top:14px"></div>
-  <div class="row" style="margin-top:18px">
-    <button class="btn ghost" onclick="exportData()">Export data (JSON)</button>
-    <button class="btn ghost" onclick="document.getElementById('importfile').click()">Import data</button>
-    <input type="file" id="importfile" accept=".json" style="display:none" onchange="importData(event)">
-  </div>
+  <input type="file" id="importfile" accept=".json" style="display:none" onchange="importData(event)">
 </section>
 
 <!-- ============ LIFTS / 1RM ============ -->
@@ -622,6 +681,31 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
     <label class="rlab" style="display:block;margin-top:14px">Why (optional)</label>
     <input type="text" id="rw-reason" placeholder="e.g. illness — 3 weeks off" style="width:100%;margin-top:4px">
     <div class="modal-actions"><button class="btn" onclick="confirmRewind()">Restart</button><button class="btn ghost" onclick="closeRewind()">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+  <div class="modalbox">
+    <div class="sheet-grab"></div>
+    <h3>Settings</h3>
+    <div class="set-sec"><div class="eyebrow">Program</div><div id="set-pause"></div></div>
+    <div class="set-sec"><div class="eyebrow">Race day</div>
+      <input type="date" id="set-race" style="width:100%;margin-top:6px" onchange="saveRaceDate()">
+      <div class="muted" style="font-size:12px;margin-top:6px">Your plan is anchored to this date. Pausing does not move it.</div>
+      <button class="btn secondary" style="margin-top:10px" onclick="downloadICS()">⤓ Add plan to calendar (.ics)</button>
+    </div>
+    <div class="set-sec"><div class="eyebrow">Restart</div>
+      <div class="muted" style="font-size:12.5px;margin-bottom:8px">Repeat a week, or restart a block you are not currently viewing.</div>
+      <button class="btn secondary" onclick="closeSettings();setTimeout(openRewind,220)">↺ Restart from an earlier week</button>
+    </div>
+    <div class="set-sec"><div class="eyebrow">Your data</div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn secondary" onclick="exportData()">Export (JSON)</button>
+        <button class="btn secondary" onclick="document.getElementById('importfile').click()">Import</button>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:8px">Everything is stored on this device only. Export to back it up.</div>
+    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeSettings()">Done</button></div>
   </div>
 </div>
 
@@ -1047,13 +1131,6 @@ function sessionPrep(wk,s){
 }
 
 /* ================= Tier 4: reminders ================= */
-function renderReminders(){
-  const el=document.getElementById('reminders'); if(!el) return;
-  el.innerHTML='<div class="eyebrow">Reminders</div>'+
-    '<div style="font-size:13.5px;margin:8px 0 12px;color:var(--muted)">Get nudged for today\'s session, deloads, retests and race week.</div>'+
-    '<div class="row"><button class="btn" onclick="downloadICS()">⤓ Add plan to calendar (.ics)</button></div>'+
-    '<div class="muted" style="font-size:12px;margin-top:10px">Calendar import is how reminders reach your phone — Apple limits web push, so the app does not use notifications. The .ics adds every session, deload, retest and race day with an alert 3h before.</div>';
-}
 function updateBadge(){
   try{ if(!navigator.setAppBadge) return; const cw=currentWeek();
     if(cw<1||cw>13){ navigator.clearAppBadge&&navigator.clearAppBadge(); return; }
@@ -1236,9 +1313,16 @@ function renderPlan(){
   if(!planView){ const sw=(cw>=1&&cw<=13)?cw:1; const w0=WEEKS.find(w=>w.w===sw); planView={block:w0.block, week:sw}; }
   renderBlockNav(); renderWeekNav(); renderWeekView();
 }
+function toggleHowTo(){ const b=document.getElementById('howto-b'), t=document.getElementById('howto-t');
+  const open=b.classList.toggle('open'); t.setAttribute('aria-expanded',open?'true':'false');
+  t.querySelector('.howto-c').textContent=open?'\u2039':'\u203a'; }
+function restartThisBlock(n){ openRewind(); const i=rewindOptions().findIndex(o=>!o.single&&o.blockN===n);
+  if(i>=0) pickRewind(i); }
 function renderBlockNav(){
   const el=document.getElementById('block-nav'); if(!el) return;
-  el.innerHTML=BLOCKS.map(b=>'<button data-b="'+b.n+'" class="'+(b.n===planView.block?'active':'')+'">Block '+b.n+'<span class="mini">'+b.name+'</span></button>').join('');
+  const cur=BLOCKS[planView.block-1]||BLOCKS[0];
+  el.innerHTML='<div class="segbar">'+BLOCKS.map(b=>'<button class="seg'+(b.n===planView.block?' on':'')+'" data-b="'+b.n+'">Block '+b.n+'</button>').join('')+'</div>'+
+    '<div class="seg-name">'+escapeHtml(cur.name)+'</div>';
   el.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{ const b=+btn.dataset.b; planView.block=b; planView.week=WEEKS.find(w=>w.block===b).w; renderPlan(); }));
 }
 function renderWeekNav(){
@@ -1261,7 +1345,8 @@ function renderWeekView(){
   if(wk.race) badges+=' <span class="badge bsim">RACE WEEK</span>';
   const doneCount=wk.sess.filter((s,i)=>S.done['w'+wk.w+'s'+i]).length;
   let html='<div class="wv-head"><div class="wv-title">Week '+wk.w+' · '+weekDates(wk.w)+(wk.w===cw?' <span class="accent">← this week</span>':'')+'</div>'+
-    '<div class="wv-focus">'+wk.focus+'</div><div class="wv-badges">'+badges+'<span class="muted" style="font-size:12px;align-self:center">'+doneCount+'/'+wk.sess.length+' done</span></div></div>';
+    '<div class="wv-focus">'+wk.focus+'</div><div class="wv-badges">'+badges+'<span class="muted" style="font-size:12px;align-self:center">'+doneCount+'/'+wk.sess.length+' done</span></div>'+
+    '<button class="btn quiet wv-restart" onclick="restartThisBlock('+wk.block+')">↺ Restart Block '+wk.block+'</button></div>';
   html+=wk.sess.map((s,i)=>renderSession(wk,s,i)).join('');
   el.innerHTML=html;
   wireWeekView(el);
@@ -1492,22 +1577,30 @@ function wireWeekView(el){
 }
 
 /* =================== PAUSE / RESUME =================== */
-function renderPause(){
-  const el=document.getElementById('d-pause'); if(!el) return;
-  const p=S.pause||{};
-  if(p.active){
-    const shown=p.since?new Date(p.since+'T00:00:00'):new Date();
-    const since=shown.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-    const msg=S.raceAnchored===false
-      ? 'Since '+since+' · Week '+currentWeek()+' held · countdown frozen. Do your own thing — nothing falls behind.'
-      : 'Since '+since+' — recording the break. Race day and the countdown are not affected; sessions you miss stay missed. Restart a block later to make up ground.';
-    el.innerHTML='<div class="pauseban"><span class="pdot"></span><div class="ptx"><div class="p1">Program paused</div><div class="p2">'+msg+'</div><button class="lnk" style="margin-top:4px" onclick="openRewind()">↺ Restart from an earlier week</button></div><button class="btn" onclick="resumeProgram()">▶ Resume</button></div>';
-  } else if((p.days||0)>0 && S.raceAnchored===false){
-    el.innerHTML='<div class="pausenote">Timeline shifted <b>+'+p.days+' day'+(p.days===1?'':'s')+'</b> from pauses (race + all dates moved). <button class="lnk" onclick="pauseProgram()">Pause again</button> · <button class="lnk" onclick="resetPause()">Reset to original</button> · <button class="lnk" onclick="openRewind()">↺ Restart from an earlier week</button></div>';
-  } else {
-    el.innerHTML='<div class="pausenote"><button class="lnk" onclick="pauseProgram()">⏸ Pause program</button> — '+(S.raceAnchored===false?'freezes the plan and countdown while you travel or take time off.':'records time off without moving race day or the countdown.')+' <button class="lnk" onclick="openRewind()">↺ Restart from an earlier week</button></div>';
+function renderPause(){ const anch=S.raceAnchored!==false; const p=S.pause||{};
+  const set=document.getElementById('set-pause');
+  if(set){
+    if(p.active){
+      const shown=p.since?new Date(p.since+'T00:00:00'):new Date();
+      set.innerHTML='<div class="pauseban"><span class="pdot"></span><div class="ptx"><div class="p1">Program paused</div><div class="p2">Since '+shown.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' · '+(anch?'time off is being recorded. Race day and the countdown are unaffected, so missed sessions stay missed — restart a block later to make up ground.':'Week '+currentWeek()+' held · countdown frozen. Do your own thing — nothing falls behind.')+'</div></div><button class="btn" onclick="resumeProgram()">▶ Resume</button></div>';
+    } else if(!anch && (p.days||0)>0){
+      set.innerHTML='<div class="pausenote">Timeline shifted <b>+'+p.days+' day'+(p.days===1?'':'s')+'</b> from pauses (race + all dates moved). <button class="lnk" onclick="pauseProgram()">Pause again</button> · <button class="lnk" onclick="resetPause()">Reset to original</button></div>';
+    } else {
+      set.innerHTML='<div class="pausenote"><button class="btn secondary" onclick="pauseProgram()">⏸ Pause program</button><div style="margin-top:8px">'+(anch?'Records time off without moving race day, so the countdown stays true.':'Freezes the plan and countdown while you travel or take time off.')+'</div></div>';
+    }
   }
+  const d=document.getElementById('d-pause'); if(!d) return;
+  d.innerHTML = p.active
+    ? '<button class="statusban" onclick="openSettings()"><span class="pdot"></span><span class="sb-t">Program paused</span><span class="sb-a">Manage</span></button>'
+    : '';
 }
+function openSettings(){ renderPause(); const r=effRace(); const el=document.getElementById('set-race');
+  if(el) el.value=r.getFullYear()+'-'+String(r.getMonth()+1).padStart(2,'0')+'-'+String(r.getDate()).padStart(2,'0');
+  sheetIn(document.getElementById('settingsModal')); }
+function closeSettings(){ sheetOut(document.getElementById('settingsModal')); }
+function saveRaceDate(){ const v=document.getElementById('set-race').value; if(!v) return;
+  if(daysBetween(todayISO(),v)<=0){ toast('Pick a race date in the future','err'); return; }
+  S.raceDate=v; save(); renderAll(); toast('Race day updated'); }
 function pauseProgram(){ if(!S.pause) S.pause={active:false,days:0}; if(S.pause.active) return; const t=new Date(); t.setHours(0,0,0,0); S.pause.active=true; S.pause.since=t.toISOString().slice(0,10); save(); renderAll(); toast(S.raceAnchored===false?'Program paused — timeline frozen':'Program paused — recording the break'); }
 function resumeProgram(){ const p=S.pause; if(!p||!p.active) return; const t=new Date(); t.setHours(0,0,0,0); const s=new Date(p.since+'T00:00:00'); const off=Math.max(0,Math.floor((t-s)/864e5)); p.days=(p.days||0)+off; p.active=false; delete p.since; save(); renderAll(); const rd=effRace().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); toast(off?('Resumed · +'+off+' day'+(off===1?'':'s')+(S.raceAnchored===false?' · race now '+rd:'')):'Resumed'); }
 function resetPause(){ S.pause={active:false,days:0}; save(); renderAll(); toast('Timeline reset to original dates'); }
@@ -1733,7 +1826,7 @@ function renderPctTable(){
     }).join('')+'</tbody></table></div>';
 }
 
-function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); renderLifts(); renderDemoLib(); renderE1rmCharts(); renderRpeChart(); renderReminders(); }
+function renderAll(){ renderPlan(); renderDash(); renderBench(); renderStatic(); renderLifts(); renderDemoLib(); renderE1rmCharts(); renderRpeChart(); }
 initBench(); renderAll(); try{ updateBadge(); }catch(e){}
 /* Task 5: drag-to-dismiss sheets + swipe between exercises */
 ['swapModal','vidModal','rewindModal'].forEach(id=>{ const m=document.getElementById(id); if(!m) return; const g=m.querySelector('.sheet-grab'), b=m.querySelector('.modalbox'); if(g&&b) attachDismissDrag(g,b,m,()=>{ m.classList.remove('open'); m.style.opacity=''; b.style.transform=''; }); });

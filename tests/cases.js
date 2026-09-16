@@ -131,7 +131,7 @@ module.exports = [
     state: { raceAnchored: true, pause: { active: true, days: 0, since: '2026-08-31' } },
     fn: () => {
       renderPause();
-      const txt = document.getElementById('d-pause').textContent;
+      const txt = document.getElementById('set-pause').textContent;
       if (/frozen/i.test(txt)) return [false, 'still claims the countdown is frozen: ' + txt];
       if (/held/i.test(txt)) return [false, 'still claims the week is held: ' + txt];
       if (!/race day/i.test(txt)) return [false, 'does not mention race day: ' + txt];
@@ -175,12 +175,116 @@ module.exports = [
     state: { raceAnchored: true, pause: { active: false, days: 0 } },
     fn: () => {
       renderPause();
-      let t = document.getElementById('d-pause').textContent;
+      let t = document.getElementById('set-pause').textContent;
       if (/frozen|freezes/i.test(t)) return [false, 'anchored idle line still claims freezing: ' + t];
       S.raceAnchored = false; save();
       renderPause();
-      t = document.getElementById('d-pause').textContent;
+      t = document.getElementById('set-pause').textContent;
       if (!/frozen|freezes/i.test(t)) return [false, 'unanchored idle line dropped freezing wording: ' + t];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'how-to starts collapsed and toggles open',
+    now: '2026-09-16',
+    fn: () => {
+      // the Plan tab must be active, or offsetHeight is 0 for reasons unrelated to the disclosure
+      document.querySelector('[data-tab="plan"]').click();
+      const b = document.getElementById('howto-b'), t = document.getElementById('howto-t');
+      if (!b || !t) return [false, 'disclosure missing'];
+      if (document.getElementById('tab-plan').offsetHeight === 0) return [false, 'plan tab not visible; test is meaningless'];
+      if (b.offsetHeight > 0) return [false, 'how-to is expanded on load'];
+      if (t.getAttribute('aria-expanded') !== 'false') return [false, 'aria-expanded wrong when closed'];
+      t.click();
+      if (document.getElementById('howto-b').offsetHeight === 0) return [false, 'did not expand'];
+      if (t.getAttribute('aria-expanded') !== 'true') return [false, 'aria-expanded wrong when open'];
+      t.click();
+      if (document.getElementById('howto-b').offsetHeight > 0) return [false, 'did not collapse again'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'block nav is one segmented control with the active block named',
+    now: '2026-09-16',
+    fn: () => {
+      document.querySelector('[data-tab="plan"]').click();
+      const segs = document.querySelectorAll('#block-nav .segbar .seg');
+      if (segs.length !== 3) return [false, 'expected 3 segments, got ' + segs.length];
+      const on = document.querySelectorAll('#block-nav .seg.on');
+      if (on.length !== 1) return [false, 'expected exactly one active segment, got ' + on.length];
+      const name = document.querySelector('#block-nav .seg-name');
+      if (!name || !name.textContent.trim()) return [false, 'active block name missing'];
+      segs[0].click();
+      if (!document.querySelectorAll('#block-nav .seg')[0].classList.contains('on'))
+        return [false, 'clicking a segment did not select it'];
+      if (document.querySelector('#block-nav .seg-name').textContent.indexOf('Base') < 0)
+        return [false, 'name did not follow the selection'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'restart-this-block targets the block on screen without a week choice',
+    now: '2026-09-16',
+    state: { lastActive: '2026-08-05' },
+    fn: () => {
+      document.querySelector('[data-tab="plan"]').click();
+      const btn = document.querySelector('.wv-restart');
+      if (!btn) return [false, 'no restart action in the week view'];
+      const shownBlock = +btn.getAttribute('onclick').match(/restartThisBlock\((\d+)\)/)[1];
+      btn.click();
+      if (!document.getElementById('rewindModal').classList.contains('open'))
+        return [false, 'restart did not open the sheet'];
+      const on = document.querySelector('#rw-options .rw-opt.on');
+      if (!on) return [false, 'sheet opened with nothing targeted'];
+      if (on.textContent.indexOf('Block ' + shownBlock) < 0)
+        return [false, 'targeted the wrong block: ' + on.textContent];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'dashboard shows pause status only, never the controls',
+    now: '2026-09-16',
+    // planStart seeded so migrateDates() skips -- an unmigrated active pause is consumed at load (F-4)
+    state: { raceAnchored: true, planStart: '2026-06-29', pause: { active: true, days: 0, since: '2026-09-01' } },
+    fn: () => {
+      renderPause();
+      const d = document.getElementById('d-pause');
+      if (!/paused/i.test(d.textContent)) return [false, 'no status shown while paused: ' + d.textContent];
+      if (d.querySelector('[onclick*="pauseProgram"],[onclick*="resumeProgram"],[onclick*="resetPause"]'))
+        return [false, 'dashboard still carries pause controls'];
+      S.pause = { active: false, days: 0 }; renderPause();
+      if (document.getElementById('d-pause').innerHTML.trim() !== '')
+        return [false, 'dashboard shows something when not paused: ' + document.getElementById('d-pause').innerHTML];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'settings sheet opens and holds the programme controls',
+    now: '2026-09-16',
+    fn: () => {
+      openSettings();
+      const m = document.getElementById('settingsModal');
+      if (!m || !m.classList.contains('open')) return [false, 'settings sheet did not open'];
+      if (!document.getElementById('set-race').value) return [false, 'race date not prefilled'];
+      const t = document.getElementById('set-pause').textContent;
+      if (!/pause/i.test(t)) return [false, 'no pause control in settings: ' + t];
+      const html = m.innerHTML;
+      for (const need of ['downloadICS', 'exportData', 'importfile', 'openRewind'])
+        if (html.indexOf(need) < 0) return [false, 'settings is missing ' + need];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'saveRaceDate rejects a past date and accepts a future one',
+    now: '2026-09-16',
+    fn: () => {
+      openSettings();
+      document.getElementById('set-race').value = '2026-01-01';
+      saveRaceDate();
+      if (S.raceDate === '2026-01-01') return [false, 'accepted a past race date'];
+      document.getElementById('set-race').value = '2026-11-07';
+      saveRaceDate();
+      if (S.raceDate !== '2026-11-07') return [false, 'rejected a valid future date: ' + S.raceDate];
       return [true, ''];
     }
   },
