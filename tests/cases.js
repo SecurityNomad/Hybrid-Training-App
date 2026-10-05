@@ -880,5 +880,23 @@ module.exports = [
         check();
       });
     }
+  },
+  {
+    name: 'logging a set refreshes in place and does not throw (savedFlash regression)',
+    now: '2026-07-10',
+    fn: () => {
+      document.querySelector('nav button[data-tab="plan"]').click();
+      document.querySelector('.logbtn').click();
+      const inp = document.querySelector('.logger.open .setgrid input');
+      if (!inp) return [false, 'no set input'];
+      let err = null; const h = e => { err = e.message; };
+      window.addEventListener('error', h);
+      inp.value = '60'; inp.dispatchEvent(new Event('change', { bubbles: true }));
+      window.removeEventListener('error', h);
+      if (err) return [false, 'threw: ' + err];
+      const lb = document.querySelector('.logbtn');
+      if (!lb.classList.contains('has')) return [false, 'log button not refreshed to Logged'];
+      return [true, ''];
+    }
   }
 ];
