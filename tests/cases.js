@@ -898,5 +898,85 @@ module.exports = [
       if (!lb.classList.contains('has')) return [false, 'log button not refreshed to Logged'];
       return [true, ''];
     }
+  },
+  {
+    name: 'every-week day move: Wed session shows on Mon, keeps its id, today + .ics follow it',
+    now: '2026-07-06',
+    state: { dayMove: { '*': { Mon: 'Wed', Wed: 'Mon' } }, done: { w2s2: true } },
+    fn: () => {
+      document.querySelector('[data-tab="plan"]').click();
+      const rows = [...document.querySelectorAll('#week-view .sess')];
+      const first = rows[0];
+      if (first.querySelector('.day').textContent !== 'Mon') return [false, 'first row day ' + first.querySelector('.day').textContent];
+      if (first.querySelector('input').dataset.id !== 'w2s2') return [false, 'Mon row is ' + first.querySelector('input').dataset.id + ', expected w2s2 (Strength B)'];
+      if (!first.querySelector('input').checked) return [false, 'tick did not follow the session'];
+      const ts = todaySession(); // 6 Jul is a Monday in week 2
+      if (!ts.s || ts.s.t !== 'Strength B') return [false, 'today is ' + (ts.s && ts.s.t)];
+      if (buildICS().indexOf('Strength B') < 0) return [false, 'ics missing'];
+      const d = sessionDate(2, effDay(WEEKS[1], 2));
+      if (d.getDay() !== 1) return [false, 'Strength B date is not a Monday'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'drag a session to another day, save this week, then reset',
+    now: '2026-07-06',
+    fn: () => {
+      document.querySelector('[data-tab="plan"]').click();
+      toggleArrange(2);
+      const list = document.getElementById('arr-sess');
+      if (!list || list.offsetHeight === 0) return [false, 'arrange panel not visible'];
+      const rows = list.querySelectorAll('.arr-row');
+      const r0 = rows[0].getBoundingClientRect(), r2 = rows[2].getBoundingClientRect();
+      const ev = (t, y) => new PointerEvent(t, { pointerId: 1, pointerType: 'mouse', isPrimary: true, bubbles: true, clientX: r0.left + 20, clientY: y, button: 0 });
+      rows[0].dispatchEvent(ev('pointerdown', r0.top + 10));
+      for (let y = r0.top + 10; y <= r2.bottom - 5; y += 8) rows[0].dispatchEvent(ev('pointermove', y));
+      rows[0].dispatchEvent(ev('pointerup', r2.bottom - 5));
+      if (!arrangeDraft) return [false, 'drop did not register'];
+      if (arrangeDraft.join() !== '1,2,0,3,4') return [false, 'draft ' + arrangeDraft.join()];
+      const save = [...document.querySelectorAll('.arr-acts .btn')].find(b => /This week/.test(b.textContent));
+      if (!save) return [false, 'no This week button'];
+      save.click();
+      if (effDay(WEEKS[1], 0) !== 'Wed' || effDay(WEEKS[1], 1) !== 'Mon') return [false, 'days ' + WEEKS[1].sess.map((_, i) => effDay(WEEKS[1], i)).join()];
+      if (effDay(WEEKS[2], 0) !== 'Mon') return [false, 'leaked into week 3'];
+      const days = [...document.querySelectorAll('#week-view .sess .day')].map(d => d.textContent).join();
+      if (days !== 'Mon,Tue,Wed,Fri,Sun') return [false, 'rendered days ' + days];
+      resetArrange(2);
+      if (S.dayMove[2]) return [false, 'reset left the move'];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'every-week save is a full permutation: no two sessions share a day in any week',
+    now: '2026-07-06',
+    state: { dayMove: { '*': { Sun: 'Sat', Sat: 'Sun' } } },
+    fn: () => {
+      document.querySelector('[data-tab="plan"]').click();
+      toggleArrange(2);
+      arrangeDraft = [4, 1, 2, 3, 0]; // Zone 2 run to the first slot, Strength A to the last
+      saveArrange(2, true);
+      const m = S.dayMove['*'], vals = Object.values(m);
+      if (new Set(vals).size !== vals.length) return [false, 'map not injective ' + JSON.stringify(m)];
+      for (const wk of WEEKS) {
+        const ds = wk.sess.map((_, i) => effDay(wk, i));
+        if (new Set(ds).size !== ds.length) return [false, 'week ' + wk.w + ' clash ' + ds.join()];
+      }
+      if (effDay(WEEKS[4], 0) !== 'Sat' || effDay(WEEKS[4], 4) !== 'Mon') return [false, 'week 5 ' + WEEKS[4].sess.map((_, i) => effDay(WEEKS[4], i)).join()];
+      return [true, ''];
+    }
+  },
+  {
+    name: 'exercise order: workout pages and logger follow S.exOrder, log keys unchanged',
+    now: '2026-07-06',
+    state: { exOrder: { w2s0: [3, 0, 1, 2, 4] } },
+    fn: () => {
+      openWorkout(2, 0);
+      const keys = [...document.querySelectorAll('#wm-track .wm-page')].map(p => (p.querySelector('[data-key]') || {}).dataset ? p.querySelector('[data-key]').dataset.key : '?');
+      if (keys[0] !== 'w2s0x3' || keys[1] !== 'w2s0x0') return [false, 'pages ' + keys.join()];
+      document.querySelector('.wm-arr .btn').click();
+      const names = [...document.querySelectorAll('#arr-ex .arr-row span')].map(s => s.textContent);
+      if (!/Sled/.test(names[0])) return [false, 'reorder list ' + names.join(' | ')];
+      return [true, ''];
+    }
   }
 ];

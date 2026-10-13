@@ -65,7 +65,7 @@ ul.clean{list-style:none}
 ul.clean li{padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
 ul.clean li:last-child{border:none}
 ul.clean li b{color:var(--accent)}
-.check li{display:flex;gap:10px;cursor:pointer}
+.check label{display:flex;gap:10px;align-items:center;cursor:pointer}
 .check input{accent-color:var(--accent);}
 .check li.done span{text-decoration:line-through;opacity:.5}
 .note{padding:12px 14px;font-size:13.5px;margin:12px 0}
@@ -440,7 +440,24 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
   font-size:12px;color:var(--muted);}
 
 /* ===== Restart this block, where you are already looking ===== */
-.wv-restart{margin-top:12px}
+.wv-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tick{width:1em;height:1em;vertical-align:-.14em;flex:0 0 auto}
+
+/* ===== Rearrange: drag sessions between days, exercises within a session ===== */
+.arrange{margin-top:12px;padding:12px;border:1px solid var(--line-strong);border-radius:12px;background:var(--card2)}
+.arr-hint{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.arr-wrap{display:grid;grid-template-columns:40px minmax(0,1fr);gap:8px}
+.arr-days>div{height:48px;margin-bottom:6px;display:flex;align-items:center;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:800;color:var(--accent)}
+.arr-row{height:48px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 12px;
+  border:1px solid var(--line-strong);border-radius:10px;background:var(--card);font-size:14px;font-weight:700;
+  touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.arr-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arr-row svg{width:18px;height:18px;flex:0 0 18px;color:var(--muted)}
+.arr-row.drag{position:relative;z-index:2;border-color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.45);cursor:grabbing}
+.arr-acts{display:flex;gap:8px;margin-top:6px}
+.arr-acts .btn{flex:1}
+.wv-acts .btn svg,.wm-arr>.btn svg{width:14px;height:14px}
+.wm-arr{flex:0 0 auto;padding:10px 16px 0}
 
 /* ============================================================
    Polish pass (v20) — alignment, one check control, one action row
@@ -455,7 +472,6 @@ h2.sec{letter-spacing:.09em;line-height:1.12}
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e0e10' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")}
 .sess input[type=checkbox]:active,.check input[type=checkbox]:active{transform:scale(.88)}
 .sess input[type=checkbox]:focus-visible,.check input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.check li{align-items:center;}
 
 /* Session row: check | body. Day sits above the title as an eyebrow, check centres on it */
 .sess{gap:14px;padding:16px 0}
@@ -784,6 +800,8 @@ const BLOCKS = [
 ];
 
 // d=day, t=type, n=name, x=details
+/* One drawn tick for every check mark: the ✓ glyph renders in each phone's own font, skewed on Android. */
+const TICK='<svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const WEEKS = [
 {w:1, block:1, focus:'Movement quality + aerobic base. Baseline tests: log 5k TT, 1000m row, 100 wall balls this week.', sess:[
  {d:'Mon',t:'Strength A',n:'Lower + Carries',x:'Back squat 4×6 @ 70–75% · RDL 3×8 · DB walking lunge 3×12/leg · Farmers carry 4×40m heavy · Plank 3×45s'},
@@ -911,7 +929,7 @@ const METRICS = [
 ];
 
 /* =================== STATE =================== */
-let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}, result:{}, swap:{}, swapGlobal:{}, e1rmNames:{}, pause:{active:false,days:0}, lastActive:null, planStart:null, raceDate:null, raceAnchored:true, history:[], discount:null};
+let S = {done:{}, bench:{}, check:{}, oneRM:{}, log:{}, videos:{}, notes:{}, e1rmHist:{}, prefs:{}, result:{}, swap:{}, swapGlobal:{}, dayMove:{}, exOrder:{}, e1rmNames:{}, pause:{active:false,days:0}, lastActive:null, planStart:null, raceDate:null, raceAnchored:true, history:[], discount:null};
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) S = Object.assign(S, JSON.parse(raw)); }catch(e){}
 // F-4: migrates legacy Model A pause banking (pause.days, and pause.active/since
 // accrued right now — pauseShiftDays() covers both) onto planStart only. Deliberately
@@ -1069,7 +1087,7 @@ let openLoggers = new Set();  // session ids with logger expanded
 let openNotes = new Set();    // session ids with notes expanded
 let demoMove = '';            // movement currently in the video modal
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function toast(msg,o){ o=(typeof o==='string')?{cls:o==='err'?'err':''}:(o||{});
+function toast(msg,o){ msg=String(msg).replace('✓',TICK); o=(typeof o==='string')?{cls:o==='err'?'err':''}:(o||{});
   const w=document.getElementById('toastWrap'); if(!w) return;
   const t=document.createElement('div'); t.className='toast'+(o.cls?' '+o.cls:'');
   t.innerHTML='<span class="tdot"></span>'+(o.icon||'')+msg+(o.undo?' <button class="toast-undo">Undo</button>':'');
@@ -1082,7 +1100,50 @@ function toast(msg,o){ o=(typeof o==='string')?{cls:o==='err'?'err':''}:(o||{});
 let _lastSaveToast=0;
 function savedFlash(){ const n=Date.now(); if(n-_lastSaveToast>2500){ _lastSaveToast=n; toast('Saved ✓'); } }
 function ringSVG(pct,size,centerHTML){ size=size||100; const sw=Math.max(6,Math.round(size*0.10)); const r=(size-sw)/2; const c=2*Math.PI*r; const off=c*(1-Math.max(0,Math.min(100,pct))/100); return '<div class="ring-c" style="width:'+size+'px;height:'+size+'px"><svg viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'"><circle class="track" cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke-width="'+sw+'"/><circle class="val" cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke-width="'+sw+'" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg><div class="rc-num" style="font-size:'+Math.round(size*0.24)+'px">'+centerHTML+'</div></div>'; }
-function todaySession(){ const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()]; const cw=currentWeek(); if(cw<1||cw>13) return {wk:null,s:null,wd:wd}; const wk=WEEKS.find(w=>w.w===cw); const s=wk?wk.sess.find(x=>x.d===wd):null; return {wk:wk,s:s,wd:wd}; }
+function todaySession(){ const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()]; const cw=currentWeek(); if(cw<1||cw>13) return {wk:null,s:null,wd:wd}; const wk=WEEKS.find(w=>w.w===cw); const s=wk?wk.sess.find((x,i)=>effDay(wk,i)===wd):null; return {wk:wk,s:s,wd:wd}; }
+/* ---- Rearranging. Sessions trade days inside their week, exercises trade places inside a session.
+   Ids (w1s2, w1s2x0) never change, so logs, notes and ticks follow the work, not the slot.
+   S.dayMove['*'] maps plan day -> day for every week (always a full 7-day permutation, so two
+   sessions can never land on one day); S.dayMove[w] maps session index -> day for one week and wins. ---- */
+const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function effDay(wk,i){ const d=wk.sess[i].d; if(DOW.indexOf(d)<0) return d; const own=S.dayMove[wk.w]; if(own&&own[i]) return own[i]; return (S.dayMove['*']||{})[d]||d; }
+function sessOrder(wk){ const k=i=>{ const n=DOW.indexOf(effDay(wk,i)); return n<0?7:n; }; return wk.sess.map((_,i)=>i).sort((a,b)=>k(a)-k(b)||a-b); }
+function exOrder(sid,n){ const o=S.exOrder[sid]; return (o&&o.length===n)?o:Array.from({length:n},(_,j)=>j); }
+// Drag a .arr-row to reorder its list. Neighbours move around the dragged row (moving the row itself would drop pointer capture).
+function attachDragSort(list,onDrop){
+  list.querySelectorAll('.arr-row').forEach(row=>row.addEventListener('pointerdown',ev=>{
+    if(ev.button>0) return; ev.preventDefault(); row.setPointerCapture(ev.pointerId); row.classList.add('drag');
+    const y0=ev.clientY, top0=row.offsetTop;
+    const move=e=>{ const p=row.previousElementSibling, n=row.nextElementSibling;
+      if(n&&e.clientY>n.getBoundingClientRect().top+n.offsetHeight/2) row.before(n);
+      else if(p&&e.clientY<p.getBoundingClientRect().top+p.offsetHeight/2) row.after(p);
+      row.style.transform='translateY('+(e.clientY-y0-(row.offsetTop-top0))+'px)'; };
+    const up=()=>{ row.removeEventListener('pointermove',move); row.removeEventListener('pointerup',up); row.removeEventListener('pointercancel',up);
+      row.classList.remove('drag'); row.style.transform=''; if(row.offsetTop!==top0) onDrop([...list.children].map(r=>+r.dataset.k)); };
+    row.addEventListener('pointermove',move); row.addEventListener('pointerup',up); row.addEventListener('pointercancel',up);
+  }));
+}
+let arrangeWeek=null, arrangeDraft=null;
+function toggleArrange(w){ arrangeWeek=arrangeWeek===w?null:w; arrangeDraft=null; renderWeekView(); }
+function renderArrange(wk){
+  const ord=arrangeDraft||sessOrder(wk).filter(i=>DOW.indexOf(wk.sess[i].d)>=0);
+  const slots=sessOrder(wk).filter(i=>DOW.indexOf(wk.sess[i].d)>=0).map(i=>effDay(wk,i));
+  const changed=!!arrangeDraft, own=!!S.dayMove[wk.w], all=!!S.dayMove['*'];
+  return '<div class="arrange"><div class="arr-hint">Drag a session onto another day. Days stay put; the work moves.</div>'+
+    '<div class="arr-wrap"><div class="arr-days">'+slots.map(d=>'<div>'+d+'</div>').join('')+'</div>'+
+    '<div class="arr-list" id="arr-sess">'+ord.map(i=>'<div class="arr-row" data-k="'+i+'"><span>'+wk.sess[i].t+' — '+wk.sess[i].n+'</span>'+ic('grip')+'</div>').join('')+'</div></div>'+
+    (changed?'<div class="arr-acts"><button class="btn" onclick="saveArrange('+wk.w+',false)">This week</button><button class="btn secondary" onclick="saveArrange('+wk.w+',true)">Every week</button></div>'
+      :(own||all)?'<button class="btn quiet" style="margin-top:10px" onclick="resetArrange('+wk.w+')">Reset '+(own?'this week':'every week')+' to the plan</button>':'')+'</div>';
+}
+function saveArrange(w,everyWeek){ const wk=WEEKS.find(x=>x.w===w), ord=arrangeDraft;
+  const slots=sessOrder(wk).filter(i=>DOW.indexOf(wk.sess[i].d)>=0).map(i=>effDay(wk,i));
+  if(everyWeek){ const m={}; ord.forEach((i,p)=>{ m[wk.sess[i].d]=slots[p]; });
+    const src=DOW.filter(d=>!(d in m)), dst=DOW.filter(d=>!Object.values(m).includes(d)); src.forEach((d,k)=>{ m[d]=dst[k]; }); // complete to a permutation
+    Object.keys(m).forEach(d=>{ if(m[d]===d) delete m[d]; });
+    if(Object.keys(m).length) S.dayMove['*']=m; else delete S.dayMove['*']; delete S.dayMove[w];
+  } else { const m={}; ord.forEach((i,p)=>{ m[i]=slots[p]; }); S.dayMove[w]=m; }
+  save(); arrangeWeek=null; arrangeDraft=null; renderWeekView(); renderDash(); toast(everyWeek?'Moved for every week':'Moved for this week'); }
+function resetArrange(w){ if(S.dayMove[w]) delete S.dayMove[w]; else delete S.dayMove['*']; save(); arrangeDraft=null; renderWeekView(); renderDash(); toast('Back to the plan'); }
 function jumpToToday(){ const cw=currentWeek(); if(cw>=1&&cw<=13){ const wk=WEEKS.find(w=>w.w===cw); planView={block:wk.block,week:cw}; const ts=todaySession(); if(ts.wk&&ts.s){ openLoggers.add('w'+ts.wk.w+'s'+ts.wk.sess.indexOf(ts.s)); } }
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -1190,7 +1251,7 @@ function buildICS(){
   WEEKS.forEach(wk=>wk.sess.forEach((s,i)=>{
     let d, summary;
     if(s.d==='RACE'){ d=effRace(); summary='🏁 HYROX RACE DAY'; d.setHours(8,0,0,0); }
-    else { d=sessionDate(wk.w,s.d); summary='HYROX W'+wk.w+': '+s.t+' — '+s.n; d.setHours(18,0,0,0); }
+    else { d=sessionDate(wk.w,effDay(wk,i)); summary='HYROX W'+wk.w+': '+s.t+' — '+s.n; d.setHours(18,0,0,0); }
     const end=new Date(d); end.setHours(d.getHours()+1,15,0,0);
     out+='BEGIN:VEVENT\r\nUID:hyrox-w'+wk.w+'s'+i+'@raha\r\nDTSTAMP:'+stamp+'\r\nDTSTART:'+icsDT(d)+'\r\nDTEND:'+icsDT(end)+'\r\nSUMMARY:'+icsEsc(summary)+'\r\nDESCRIPTION:'+icsEsc((s.x||'').replace(/\n/g,' '))+'\r\nBEGIN:VALARM\r\nTRIGGER:-PT3H\r\nACTION:DISPLAY\r\nDESCRIPTION:'+icsEsc(summary)+'\r\nEND:VALARM\r\nEND:VEVENT\r\n';
   }));
@@ -1262,7 +1323,8 @@ function ic(n){ const p={
   swap:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
   note:'<path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/>',
   fire:'<path d="M12 3c1.2 3 4 4.2 4 7.6A4 4 0 018 10.6c0-1.6.8-2.6.8-2.6.6 1.8 2.8 1.4 3.2-5z"/>',
-  plus:'<path d="M12 6v12M6 12h12"/>'
+  plus:'<path d="M12 6v12M6 12h12"/>',
+  grip:'<path d="M5 9h14M5 15h14"/>'
 }; return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(p[n]||'')+'</svg>'; }
 function celebrate(msg){ toast(msg,{cls:'pr',icon:'🎉 ',ms:3200,vibrate:[40,40,140]}); }
 function prescMeasure(item){ const m=item.match(/(\d+)\s*[×x]\s*(\d+)\s*(m\b|s\b|cal)?/); return m?{sets:+m[1],per:+m[2],unit:(m[3]||'').trim()}:null; }
@@ -1388,10 +1450,13 @@ function renderWeekView(){
   const doneCount=wk.sess.filter((s,i)=>S.done['w'+wk.w+'s'+i]).length;
   let html='<div class="wv-head"><div class="wv-title">Week '+wk.w+' · '+weekDates(wk.w)+(wk.w===cw?' <span class="accent">← this week</span>':'')+'</div>'+
     '<div class="wv-focus">'+wk.focus+'</div><div class="wv-badges">'+badges+'<span class="muted" style="font-size:12px;align-self:center">'+doneCount+'/'+wk.sess.length+' done</span></div>'+
-    '<button class="btn quiet wv-restart" onclick="restartThisBlock('+wk.block+')">↺ Restart Block '+wk.block+'</button></div>';
-  html+=wk.sess.map((s,i)=>renderSession(wk,s,i)).join('');
+    '<div class="wv-acts"><button class="btn quiet wv-restart" onclick="restartThisBlock('+wk.block+')">↺ Restart Block '+wk.block+'</button>'+
+    (wk.race?'':'<button class="btn quiet" onclick="toggleArrange('+wk.w+')">'+ic('grip')+(arrangeWeek===wk.w?' Done':' Move days')+'</button>')+'</div>'+
+    (arrangeWeek===wk.w?renderArrange(wk):'')+'</div>';
+  html+=sessOrder(wk).map(i=>renderSession(wk,wk.sess[i],i)).join('');
   el.innerHTML=html;
   wireWeekView(el);
+  const al=el.querySelector('#arr-sess'); if(al) attachDragSort(al,ord=>{ arrangeDraft=ord; renderWeekView(); });
 }
 /* ============ Workout Mode ============ */
 let workoutCtx=null;
@@ -1416,7 +1481,7 @@ function refreshExerciseInPlace(scope,key){
   const slot=scope.querySelector('.progslot[data-progfor="'+key+'"]');
   if(slot){ slot.innerHTML=progHTML(key); wireSetas(slot); }
   const sid=key.replace(/x\d+$/,''), lb=scope.querySelector('.logbtn[data-log="'+sid+'"]');
-  if(lb){ const m=sid.match(/^w(\d+)s(\d+)$/); if(m){ const wk=WEEKS.find(w=>w.w===+m[1]), s=wk&&wk.sess[+m[2]]; if(s){ const any=loggableItems(s.x).some((it,j)=>logHasData(sid+'x'+j)); lb.classList.toggle('has',any); lb.innerHTML=ic('log')+(any?' Logged ✓':' Log sets'); } } }
+  if(lb){ const m=sid.match(/^w(\d+)s(\d+)$/); if(m){ const wk=WEEKS.find(w=>w.w===+m[1]), s=wk&&wk.sess[+m[2]]; if(s){ const any=loggableItems(s.x).some((it,j)=>logHasData(sid+'x'+j)); lb.classList.toggle('has',any); lb.innerHTML=ic('log')+(any?' Logged '+TICK:' Log sets'); } } }
 }
 /* ---- Task 3: interruptible spring util ---- */
 function prefersReducedMotion(){ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
@@ -1464,7 +1529,7 @@ function renderWorkout(){
   const wk=WEEKS.find(x=>x.w===workoutCtx.w); if(!wk) return; const s=wk.sess[workoutCtx.i]; const id='w'+wk.w+'s'+workoutCtx.i;
   const isLift=/Strength|Stations|Openers|Primer/.test(s.t);
   const items=isLift?loggableItems(s.x):[];
-  const pageHTML = items.length ? items.map((it,j)=>'<div class="wm-page">'+renderExercise(id,it,j,s.t,wk.deload)+'</div>') : ['<div class="wm-page">'+renderResult(id,s)+'</div>'];
+  const pageHTML = items.length ? exOrder(id,items.length).map(j=>'<div class="wm-page">'+renderExercise(id,items[j],j,s.t,wk.deload)+'</div>') : ['<div class="wm-page">'+renderResult(id,s)+'</div>'];
   const count=pageHTML.length;
   workoutCtx.page=Math.max(0,Math.min(workoutCtx.page||0,count-1));
   const done=!!S.done[id];
@@ -1473,12 +1538,15 @@ function renderWorkout(){
   const wmc=document.getElementById('wm-content');
   wmc.innerHTML=
     '<div class="sheet-grab" style="cursor:grab"></div>'+
-    '<div class="wm-head"><div><div class="eyebrow" style="color:var(--accent2)">'+s.d+' · Week '+wk.w+(wk.deload?' · DELOAD':'')+countLbl+'</div><div class="wm-title">'+s.t+'<br>'+s.n+'</div></div><button class="wm-x" onclick="closeWorkout()">✕</button></div>'+
+    '<div class="wm-head"><div><div class="eyebrow" style="color:var(--accent2)">'+effDay(wk,workoutCtx.i)+' · Week '+wk.w+(wk.deload?' · DELOAD':'')+countLbl+'</div><div class="wm-title">'+s.t+'<br>'+s.n+'</div></div><button class="wm-x" onclick="closeWorkout()">✕</button></div>'+
     '<div class="wm-desc">'+annotateDesc(s.x)+'</div>'+
+    (count>1?'<div class="wm-arr"><button class="btn quiet" onclick="workoutCtx.arr=!workoutCtx.arr;renderWorkout()">'+ic('grip')+(workoutCtx.arr?' Done':' Reorder exercises')+'</button>'+
+      (workoutCtx.arr?'<div class="arrange"><div class="arr-hint">Station taken? Drag to change the order.</div><div class="arr-list" id="arr-ex">'+exOrder(id,items.length).map(j=>'<div class="arr-row" data-k="'+j+'"><span>'+escapeHtml(S.swap[id+'x'+j]||(S.swapGlobal&&S.swapGlobal[movementKey(movementName(items[j]))])||movementName(items[j]))+'</span>'+ic('grip')+'</div>').join('')+'</div></div>':'')+'</div>':'')+
     dots+
     '<div class="wm-pager" id="wm-pager"><div class="wm-track" id="wm-track">'+pageHTML.join('')+'</div></div>'+
-    '<button class="wm-done'+(done?' on':'')+'" onclick="toggleWorkoutDone()">'+(done?'✓ Session complete':'Mark session complete')+'</button>';
+    '<button class="wm-done'+(done?' on':'')+'" onclick="toggleWorkoutDone()">'+(done?TICK+' Session complete':'Mark session complete')+'</button>';
   wireWorkout(wmc);
+  const al=wmc.querySelector('#arr-ex'); if(al) attachDragSort(al,ord=>{ S.exOrder[id]=ord; save(); workoutCtx.page=0; renderWorkout(); });
   const grab=wmc.querySelector('.sheet-grab'); if(grab) attachDismissDrag(grab, wmc, document.getElementById('workoutMode'), finalizeWorkout);
   const pager=document.getElementById('wm-pager'); if(pager){ pager.scrollLeft=workoutCtx.page*(pager.clientWidth||0); if(count>1) attachPager(pager,count); }
   wmc.querySelectorAll('.wm-dot').forEach(d=>d.addEventListener('click',()=>goToPage(+d.dataset.page, count)));
@@ -1515,14 +1583,14 @@ function renderSession(wk,s,i){
   const isLift=/Strength|Stations|Openers|Primer/.test(s.t);
   const items=isLift?loggableItems(s.x):[];
   const anyLog=items.some((it,j)=>logHasData(id+'x'+j));
-  const logBtn=items.length?'<button class="logbtn'+(anyLog?' has':'')+'" data-log="'+id+'">'+ic('log')+(anyLog?' Logged ✓':' Log sets')+'</button>':'';
-  const logger=items.length?'<div class="logger'+(openLoggers.has(id)?' open':'')+'">'+items.map((it,j)=>renderExercise(id,it,j,s.t,wk.deload)).join('')+'</div>':'';
+  const logBtn=items.length?'<button class="logbtn'+(anyLog?' has':'')+'" data-log="'+id+'">'+ic('log')+(anyLog?' Logged '+TICK:' Log sets')+'</button>':'';
+  const logger=items.length?'<div class="logger'+(openLoggers.has(id)?' open':'')+'">'+exOrder(id,items.length).map(j=>renderExercise(id,items[j],j,s.t,wk.deload)).join('')+'</div>':'';
   const showResult=!isLift;
   const resHas=showResult&&resultHasData(id);
-  const resBtn=showResult?'<button class="resbtn'+(resHas?' has':'')+'" data-result="'+id+'">'+ic('result')+(resHas?' Logged ✓':' Log result')+'</button>':'';
+  const resBtn=showResult?'<button class="resbtn'+(resHas?' has':'')+'" data-result="'+id+'">'+ic('result')+(resHas?' Logged '+TICK:' Log result')+'</button>':'';
   const resPanel=showResult?renderResult(id,s):'';
   const hasNote=!!(S.notes[id]&&S.notes[id].trim()), nOpen=openNotes.has(id);
-  const noteBtn='<button class="notebtn'+(hasNote?' has':'')+'" data-note="'+id+'">'+ic('note')+(hasNote?' Notes ✓':' Notes')+'</button>';
+  const noteBtn='<button class="notebtn'+(hasNote?' has':'')+'" data-note="'+id+'">'+ic('note')+(hasNote?' Notes '+TICK:' Notes')+'</button>';
   const notePv=(hasNote&&!nOpen)?'<div class="notepv">'+escapeHtml(S.notes[id])+'</div>':'';
   const noteWrap='<div class="notewrap'+(nOpen?' open':'')+'"><textarea class="noteta" data-noteid="'+id+'" placeholder="How did it go? e.g. 4 of 5 × 600m done, legs heavy — hold pace and add the 5th next time.">'+escapeHtml(S.notes[id]||'')+'</textarea></div>';
   const prep=sessionPrep(wk,s), prepOpen=openPrep.has(id);
@@ -1532,7 +1600,7 @@ function renderSession(wk,s,i){
     (prep.prep?'<div class="prep-item"><b>Prep / agility</b><br>'+prep.prep+'</div>':'')+
     '<div class="prep-item"><b>Mobility</b><br>'+prep.mob+'</div></div>';
   return '<div class="sess'+done+'"><input type="checkbox" data-id="'+id+'" '+(S.done[id]?'checked':'')+'>'+
-    '<div class="sbody"><div class="day">'+s.d+'</div><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div><div class="sessfoot">'+logBtn+resBtn+'<button class="wbtn" onclick="openWorkout('+wk.w+','+i+')">'+ic('play')+' Workout</button><button class="moretoggle" title="More" onclick="this.parentNode.classList.toggle(\'show-more\')">•••</button><span class="moreitems">'+prepBtn+noteBtn+'</span></div>'+logger+resPanel+prepBlock+notePv+noteWrap+'</div></div>';
+    '<div class="sbody"><div class="day">'+effDay(wk,i)+'</div><div class="st">'+s.t+' — '+s.n+'</div><div class="sd">'+annotateDesc(s.x)+'</div><div class="sessfoot">'+logBtn+resBtn+'<button class="wbtn" onclick="openWorkout('+wk.w+','+i+')">'+ic('play')+' Workout</button><button class="moretoggle" title="More" onclick="this.parentNode.classList.toggle(\'show-more\')">•••</button><span class="moreitems">'+prepBtn+noteBtn+'</span></div>'+logger+resPanel+prepBlock+notePv+noteWrap+'</div></div>';
 }
 function renderExercise(id,item,j,sType,isDeload){
   const key=id+'x'+j;
@@ -1604,7 +1672,7 @@ function wireWeekView(el){
     if(v) S.result[id][rf]=v; else delete S.result[id][rf];
     if(!resultHasData(id)) delete S.result[id];
     saveTrained();
-    const btn=el.querySelector('.resbtn[data-result="'+id+'"]'); if(btn){ const has=resultHasData(id); btn.classList.toggle('has',has); btn.innerHTML=ic('result')+(has?' Logged ✓':' Log result'); }
+    const btn=el.querySelector('.resbtn[data-result="'+id+'"]'); if(btn){ const has=resultHasData(id); btn.classList.toggle('has',has); btn.innerHTML=ic('result')+(has?' Logged '+TICK:' Log result'); }
   }));
   el.querySelectorAll('.restbtn').forEach(b=>b.addEventListener('click',()=>startRest(+b.dataset.rest,b.dataset.restlabel)));
   el.querySelectorAll('.prepbtn').forEach(b=>b.addEventListener('click',()=>{ const id=b.dataset.prep; openPrep.has(id)?openPrep.delete(id):openPrep.add(id); renderWeekView(); }));
@@ -1614,7 +1682,7 @@ function wireWeekView(el){
     if(v.trim()) S.notes[id]=v; else delete S.notes[id];
     save();
     const btn=el.querySelector('.notebtn[data-note="'+id+'"]');
-    if(btn){ const has=!!(S.notes[id]&&S.notes[id].trim()); btn.classList.toggle('has',has); btn.innerHTML=ic('note')+(has?' Notes ✓':' Notes'); }
+    if(btn){ const has=!!(S.notes[id]&&S.notes[id].trim()); btn.classList.toggle('has',has); btn.innerHTML=ic('note')+(has?' Notes '+TICK:' Notes'); }
   }));
 }
 
@@ -1712,7 +1780,7 @@ function renderDash(){
   // today card
   const ts=todaySession(), tdEl=document.getElementById('d-today');
   if(ts.wk && ts.s){ const sid='w'+ts.wk.w+'s'+ts.wk.sess.indexOf(ts.s), isDone=!!S.done[sid];
-    tdEl.innerHTML='<div class="eyebrow">Today · '+ts.wd+' · Week '+ts.wk.w+'</div><div class="t-sess">'+ts.s.t+' — '+ts.s.n+(isDone?' <span class="green">✓</span>':'')+'</div><div class="t-desc">'+annotateDesc(ts.s.x)+'</div><div class="t-motiv">'+['Trust the process — run 1 slow','Compromised running is the game','Own the roxzone','Every rep banks a second','Discipline on the easy days','Strong is a skill','The wall is a checkpoint'][new Date().getDate()%7]+'</div><button class="btn" style="margin-top:12px" onclick="openWorkout('+ts.wk.w+','+ts.wk.sess.indexOf(ts.s)+')">▶ Start workout</button>';
+    tdEl.innerHTML='<div class="eyebrow">Today · '+ts.wd+' · Week '+ts.wk.w+'</div><div class="t-sess">'+ts.s.t+' — '+ts.s.n+(isDone?' <span class="green">'+TICK+'</span>':'')+'</div><div class="t-desc">'+annotateDesc(ts.s.x)+'</div><div class="t-motiv">'+['Trust the process — run 1 slow','Compromised running is the game','Own the roxzone','Every rep banks a second','Discipline on the easy days','Strong is a skill','The wall is a checkpoint'][new Date().getDate()%7]+'</div><button class="btn" style="margin-top:12px" onclick="openWorkout('+ts.wk.w+','+ts.wk.sess.indexOf(ts.s)+')">▶ Start workout</button>';
   } else if(ts.wk){
     tdEl.innerHTML='<div class="eyebrow">Today · '+ts.wd+'</div><div class="t-sess">Rest day</div><div class="t-desc">No session scheduled. Recover, hydrate, mobilise.</div><button class="btn ghost" style="margin-top:14px" onclick="jumpToToday()">Open this week →</button>';
   } else {
@@ -1821,7 +1889,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{},prefs:{},result:{},swap:{},swapGlobal:{},e1rmNames:{},pause:{active:false,days:0},lastActive:null,planStart:null,raceDate:null,raceAnchored:true,history:[],discount:null},JSON.parse(r.result)); migrateDates(); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
+  r.onload=()=>{ try{ S=Object.assign({done:{},bench:{},check:{},oneRM:{},log:{},videos:{},notes:{},e1rmHist:{},prefs:{},result:{},swap:{},swapGlobal:{},dayMove:{},exOrder:{},e1rmNames:{},pause:{active:false,days:0},lastActive:null,planStart:null,raceDate:null,raceAnchored:true,history:[],discount:null},JSON.parse(r.result)); migrateDates(); save(); renderAll(); toast('Data imported ✓'); }catch(e){ toast('Invalid file','err'); } };
   r.readAsText(f);
 }
 
@@ -1833,7 +1901,7 @@ function renderStatic(){
 }
 function renderChecklist(){
   const el=document.getElementById('checklist');
-  el.innerHTML=CHECKLIST.map((c,i)=>'<li class="'+(S.check[i]?'done':'')+'"><input type="checkbox" data-i="'+i+'" '+(S.check[i]?'checked':'')+'><span>'+c+'</span></li>').join('');
+  el.innerHTML=CHECKLIST.map((c,i)=>'<li class="'+(S.check[i]?'done':'')+'"><label><input type="checkbox" data-i="'+i+'" '+(S.check[i]?'checked':'')+'><span>'+c+'</span></label></li>').join('');
   el.querySelectorAll('input').forEach(cb=>cb.addEventListener('change',e=>{
     S.check[e.target.dataset.i]=e.target.checked; if(!e.target.checked) delete S.check[e.target.dataset.i];
     save(); renderChecklist();
